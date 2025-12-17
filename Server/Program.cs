@@ -1,42 +1,67 @@
-var builder = WebApplication.CreateBuilder(args);
+using Server.Hubs;
+using Serilog;
+using System.Net;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    Log.Information("Starting NNU InterConnector SignalR Server");
+    
+    var builder = WebApplication.CreateBuilder(args);
+    
+    builder.Host.UseSerilog();
+    
+    builder.Services.AddSignalR();
+    builder.Services.AddControllers();
+    builder.Services.AddCors(options =>
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+    });
+    
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.Listen(IPAddress.Any, 8080, listenOptions =>
+        {
+            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+        });
+        
+        options.Listen(IPAddress.Any, 8081, listenOptions =>
+        {
+            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+        });
+    });
+    
+    var app = builder.Build();
+    
+    app.UseCors("AllowAll");
+    app.UseRouting();
+    
+    app.MapControllers();
+    app.MapHub<InterconnectionHub>("/interconnectionHub");
+    
+    var cleanupTimer = new System.Threading.Timer(_ =>
+    {
+        InterconnectionHub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
+    }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    
+    Log.Information("Server listening on HTTP: http://120.55.67.157:8080");
+    Log.Information("Server listening on WebSocket: ws://120.55.67.157:8081");
+    
+    app.Run();
+}
+catch (Exception ex)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }
