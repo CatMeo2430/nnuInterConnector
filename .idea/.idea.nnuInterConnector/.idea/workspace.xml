@@ -12,15 +12,10 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/App.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/App.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Client.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Helper.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Helper/Helper.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Helper/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Client/Services/SignalRService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Services/SignalRService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Helper/Services/FirewallService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Helper/Services/FirewallService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Server/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Server/Server.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Server.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +41,7 @@
   }
 }]]></component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/App.xaml" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Helper/Program.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
@@ -163,7 +159,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765944605281</updated>
-      <workItem from="1765944605720" duration="6654000" />
+      <workItem from="1765944605720" duration="11042000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -173,7 +169,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765945230739</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Dev 0.0.0.0&#10;基本框架实现&#10;客户端已成功发送与接收互联请求">
+      <option name="closed" value="true" />
+      <created>1765953397591</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1765953397591</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -184,7 +188,8 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Init Commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Init Commit" />
+    <MESSAGE value="Dev 0.0.0.0&#10;基本框架实现&#10;客户端已成功发送与接收互联请求" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.0.0.0&#10;基本框架实现&#10;客户端已成功发送与接收互联请求" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

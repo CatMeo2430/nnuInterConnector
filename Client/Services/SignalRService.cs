@@ -126,6 +126,17 @@ public class SignalRService
             ConnectionRejected?.Invoke(this, rejecterId);
         });
 
+        _connection.On<int, string>("PeerDisconnected", async (peerId, peerIp) =>
+        {
+            OnLogMessage($"互联的客户端 ID {peerId} (IP: {peerIp}) 已断开连接");
+            
+            var connectionToRemove = Connections.FirstOrDefault(c => c.PeerId == peerId);
+            if (connectionToRemove != null)
+            {
+                await DisconnectPeerAsync(connectionToRemove);
+            }
+        });
+
         _connection.Closed += async (error) =>
         {
             OnLogMessage($"WebSocket连接断开: {(error?.Message ?? "未知原因")}");
@@ -266,6 +277,12 @@ public class SignalRService
     {
         try
         {
+            if (_connection?.State == HubConnectionState.Connected)
+            {
+                OnLogMessage($"正在通知服务器断开与ID {connection.PeerId} 的连接...");
+                await _connection.InvokeAsync("DisconnectPeer", connection.PeerId);
+            }
+
             var helperPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Helper.exe");
             if (System.IO.File.Exists(helperPath))
             {

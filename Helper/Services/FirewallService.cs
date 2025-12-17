@@ -9,14 +9,15 @@ public class FirewallService
     {
         try
         {
-            var ruleName = $"NNU_InterConnector_{ipAddress.Replace('.', '_')}";
+            var ruleNameIn = $"NNU_InterConnector_In_{ipAddress.Replace('.', '_')}";
+            var ruleNameOut = $"NNU_InterConnector_Out_{ipAddress.Replace('.', '_')}";
             
-            var process = new Process
+            var processIn = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "netsh",
-                    Arguments = $"advfirewall firewall add rule name=\"{ruleName}\" dir=in action=allow remoteip={ipAddress}/32 enable=yes",
+                    Arguments = $"advfirewall firewall add rule name=\"{ruleNameIn}\" dir=in action=allow remoteip={ipAddress}/32 enable=yes",
                     Verb = "runas",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -25,19 +26,38 @@ public class FirewallService
                 }
             };
 
-            process.Start();
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
+            processIn.Start();
+            var outputIn = processIn.StandardOutput.ReadToEnd();
+            var errorIn = processIn.StandardError.ReadToEnd();
+            processIn.WaitForExit();
 
-            if (process.ExitCode == 0)
+            var processOut = new Process
             {
-                Console.WriteLine($"防火墙规则已添加: {ruleName}");
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = $"advfirewall firewall add rule name=\"{ruleNameOut}\" dir=out action=allow remoteip={ipAddress}/32 enable=yes",
+                    Verb = "runas",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            processOut.Start();
+            var outputOut = processOut.StandardOutput.ReadToEnd();
+            var errorOut = processOut.StandardError.ReadToEnd();
+            processOut.WaitForExit();
+
+            if (processIn.ExitCode == 0 && processOut.ExitCode == 0)
+            {
+                Console.WriteLine($"防火墙规则已添加: {ruleNameIn} 和 {ruleNameOut}");
                 return true;
             }
             else
             {
-                Console.WriteLine($"添加防火墙规则失败: {error}");
+                Console.WriteLine($"添加防火墙规则失败: {errorIn} {errorOut}");
                 return false;
             }
         }
@@ -52,14 +72,15 @@ public class FirewallService
     {
         try
         {
-            var ruleName = $"NNU_InterConnector_{ipAddress.Replace('.', '_')}";
+            var ruleNameIn = $"NNU_InterConnector_In_{ipAddress.Replace('.', '_')}";
+            var ruleNameOut = $"NNU_InterConnector_Out_{ipAddress.Replace('.', '_')}";
             
-            var process = new Process
+            var processIn = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "netsh",
-                    Arguments = $"advfirewall firewall delete rule name=\"{ruleName}\"",
+                    Arguments = $"advfirewall firewall delete rule name=\"{ruleNameIn}\"",
                     Verb = "runas",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -68,19 +89,39 @@ public class FirewallService
                 }
             };
 
-            process.Start();
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
+            processIn.Start();
+            var outputIn = processIn.StandardOutput.ReadToEnd();
+            var errorIn = processIn.StandardError.ReadToEnd();
+            processIn.WaitForExit();
 
-            if (process.ExitCode == 0 || output.Contains("已删除") || output.Contains("Deleted"))
+            var processOut = new Process
             {
-                Console.WriteLine($"防火墙规则已删除: {ruleName}");
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = $"advfirewall firewall delete rule name=\"{ruleNameOut}\"",
+                    Verb = "runas",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            processOut.Start();
+            var outputOut = processOut.StandardOutput.ReadToEnd();
+            var errorOut = processOut.StandardError.ReadToEnd();
+            processOut.WaitForExit();
+
+            if ((processIn.ExitCode == 0 || outputIn.Contains("已删除") || outputIn.Contains("Deleted")) &&
+                (processOut.ExitCode == 0 || outputOut.Contains("已删除") || outputOut.Contains("Deleted")))
+            {
+                Console.WriteLine($"防火墙规则已删除: {ruleNameIn} 和 {ruleNameOut}");
                 return true;
             }
             else
             {
-                Console.WriteLine($"删除防火墙规则失败: {error}");
+                Console.WriteLine($"删除防火墙规则失败: {errorIn} {errorOut}");
                 return false;
             }
         }
@@ -95,7 +136,8 @@ public class FirewallService
     {
         try
         {
-            var ruleName = $"NNU_InterConnector_{ipAddress.Replace('.', '_')}";
+            var ruleNameIn = $"NNU_InterConnector_In_{ipAddress.Replace('.', '_')}";
+            var ruleNameOut = $"NNU_InterConnector_Out_{ipAddress.Replace('.', '_')}";
             
             var process = new Process
             {
@@ -113,7 +155,7 @@ public class FirewallService
             var output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            return output.Contains(ruleName);
+            return output.Contains(ruleNameIn) || output.Contains(ruleNameOut);
         }
         catch
         {

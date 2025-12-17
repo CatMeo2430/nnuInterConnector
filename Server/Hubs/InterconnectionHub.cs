@@ -9,12 +9,15 @@ public class InterconnectionHub : Hub
 {
     private static readonly ConcurrentDictionary<int, ClientInfo> _clients = new();
     private static readonly ConcurrentDictionary<string, int> _uuidToId = new();
+    private static readonly ConcurrentDictionary<int, HashSet<int>> _connections = new();
     private static readonly Random _random = new();
     private readonly ILogger<InterconnectionHub> _logger;
+    private readonly IHubContext<InterconnectionHub> _hubContext;
 
-    public InterconnectionHub(ILogger<InterconnectionHub> logger)
+    public InterconnectionHub(ILogger<InterconnectionHub> logger, IHubContext<InterconnectionHub> hubContext)
     {
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public override async Task OnConnectedAsync()
@@ -41,18 +44,52 @@ public class InterconnectionHub : Hub
         await base.OnConnectedAsync();
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        int? disconnectedClientId = null;
+        string? disconnectedClientIp = null;
+        
         foreach (var kvp in _clients)
         {
             if (kvp.Value.ConnectionId == Context.ConnectionId)
             {
-                _logger.LogInformation("Client disconnected: ID={ClientId}", kvp.Key);
+                disconnectedClientId = kvp.Key;
+                disconnectedClientIp = kvp.Value.IpAddress;
+                _logger.LogInformation("Client disconnected: ID={ClientId}, IP={Ip}", kvp.Key, disconnectedClientIp);
                 break;
             }
         }
 
-        return base.OnDisconnectedAsync(exception);
+        if (disconnectedClientId.HasValue)
+        {
+            var clientId = disconnectedClientId.Value;
+            
+            if (_connections.TryRemove(clientId, out var connectedClients))
+            {
+                foreach (var connectedClientId in connectedClients)
+                {
+                    if (_connections.TryGetValue(connectedClientId, out var otherConnections))
+                    {
+                        otherConnections.Remove(clientId);
+                    }
+
+                    if (_clients.TryGetValue(connectedClientId, out var connectedClientInfo))
+                    {
+                        _logger.LogInformation("Notifying client {ClientId} about disconnection of {DisconnectedId}", 
+                            connectedClientId, clientId);
+                        await Clients.Client(connectedClientInfo.ConnectionId)
+                            .SendAsync("PeerDisconnected", clientId, disconnectedClientIp);
+                    }
+                }
+            }
+
+            if (_clients.TryRemove(clientId, out var clientInfo))
+            {
+                _uuidToId.TryRemove(clientInfo.Uuid, out _);
+            }
+        }
+
+        await base.OnDisconnectedAsync(exception);
     }
 
     public async Task RegisterClient(string uuid, string ipAddress)
@@ -127,6 +164,14 @@ public class InterconnectionHub : Hub
 
         _logger.LogInformation("Connection accepted: {RequesterId} <-> {AccepterId}", requesterId, accepterId);
 
+        _connections.AddOrUpdate(requesterId, 
+            new HashSet<int> { accepterId }, 
+            (key, oldValue) => { oldValue.Add(accepterId); return oldValue; });
+        
+        _connections.AddOrUpdate(accepterId, 
+            new HashSet<int> { requesterId }, 
+            (key, oldValue) => { oldValue.Add(requesterId); return oldValue; });
+
         await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionEstablished", accepterId, accepterInfo.IpAddress);
         await Clients.Client(accepterInfo.ConnectionId).SendAsync("ConnectionEstablished", requesterId, requesterInfo.IpAddress);
     }
@@ -144,6 +189,40 @@ public class InterconnectionHub : Hub
         await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionRejected", rejecterId);
     }
 
+    public async Task DisconnectPeer(int peerId)
+    {
+        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
+        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
+            return;
+
+        if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
+            !_clients.TryGetValue(peerId, out var peerInfo))
+            return;
+
+        if (!_connections.TryGetValue(requesterId, out var requesterConnections) ||
+            !requesterConnections.Contains(peerId))
+        {
+            _logger.LogWarning("Disconnect attempt for non-existent connection: {RequesterId} -/-> {PeerId}", 
+                requesterId, peerId);
+            return;
+        }
+
+        _logger.LogInformation("Connection disconnected: {RequesterId} -/-> {PeerId}", requesterId, peerId);
+
+        requesterConnections.Remove(peerId);
+        if (requesterConnections.Count == 0)
+            _connections.TryRemove(requesterId, out _);
+
+        if (_connections.TryGetValue(peerId, out var peerConnections))
+        {
+            peerConnections.Remove(requesterId);
+            if (peerConnections.Count == 0)
+                _connections.TryRemove(peerId, out _);
+        }
+
+        await Clients.Client(peerInfo.ConnectionId).SendAsync("PeerDisconnected", requesterId, requesterInfo.IpAddress);
+    }
+
     private int GenerateUniqueId()
     {
         int id;
@@ -155,15 +234,39 @@ public class InterconnectionHub : Hub
         return id;
     }
 
-    public static void CleanupInactiveClients(TimeSpan timeout)
+    public async Task CleanupInactiveClients(TimeSpan timeout)
     {
         var cutoffTime = DateTime.UtcNow - timeout;
         var inactiveClients = _clients.Where(kvp => kvp.Value.LastHeartbeat < cutoffTime).ToList();
 
         foreach (var kvp in inactiveClients)
         {
-            _clients.TryRemove(kvp.Key, out _);
-            _uuidToId.TryRemove(kvp.Value.Uuid, out _);
+            var clientId = kvp.Key;
+            var clientInfo = kvp.Value;
+            
+            _logger.LogInformation("Cleaning up inactive client: ID={ClientId}, IP={Ip}", clientId, clientInfo.IpAddress);
+
+            if (_connections.TryRemove(clientId, out var connectedClients))
+            {
+                foreach (var connectedClientId in connectedClients)
+                {
+                    if (_connections.TryGetValue(connectedClientId, out var otherConnections))
+                    {
+                        otherConnections.Remove(clientId);
+                    }
+
+                    if (_clients.TryGetValue(connectedClientId, out var connectedClientInfo))
+                    {
+                        _logger.LogInformation("Notifying client {ClientId} about disconnection of inactive {DisconnectedId}", 
+                            connectedClientId, clientId);
+                        await _hubContext.Clients.Client(connectedClientInfo.ConnectionId)
+                            .SendAsync("PeerDisconnected", clientId, clientInfo.IpAddress);
+                    }
+                }
+            }
+
+            _clients.TryRemove(clientId, out _);
+            _uuidToId.TryRemove(clientInfo.Uuid, out _);
         }
     }
 }

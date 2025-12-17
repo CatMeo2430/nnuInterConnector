@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.SignalR;
 using Server.Hubs;
 using Serilog;
 using System.Net;
@@ -47,9 +48,14 @@ try
     app.MapControllers();
     app.MapHub<InterconnectionHub>("/interconnectionHub");
     
-    var cleanupTimer = new System.Threading.Timer(_ =>
+    var cleanupTimer = new System.Threading.Timer(async _ =>
     {
-        InterconnectionHub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
+        using var scope = app.Services.CreateScope();
+        var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<InterconnectionHub>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<InterconnectionHub>>();
+        
+        var hub = new InterconnectionHub(logger, hubContext);
+        await hub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
     }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     
     Log.Information("Server listening on HTTP: http://120.55.67.157:8080");
