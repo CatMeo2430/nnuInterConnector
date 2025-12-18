@@ -92,12 +92,25 @@ public class InterconnectionHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task RegisterClient(string uuid, string ipAddress)
+    public async Task RegisterClient(string uuid)
     {
         if (_uuidToId.TryGetValue(uuid, out var existingId))
         {
-            _logger.LogInformation("Client already registered: ID={ClientId}, IP={Ip}", existingId, ipAddress);
+            if (_clients.TryGetValue(existingId, out var existingInfo))
+            {
+                existingInfo.ConnectionId = Context.ConnectionId;
+                existingInfo.LastHeartbeat = DateTime.UtcNow;
+                _logger.LogInformation("Client re-registered: ID={ClientId}, IP={Ip}", existingId, existingInfo.IpAddress);
+            }
             await Clients.Caller.SendAsync("RegistrationSuccess", existingId);
+            return;
+        }
+
+        var ipAddress = Controllers.RegistrationController.GetPendingIp(uuid);
+        if (string.IsNullOrEmpty(ipAddress))
+        {
+            _logger.LogWarning("Client registration failed: IP not found for UUID={Uuid}", uuid);
+            Context.Abort();
             return;
         }
 
@@ -112,12 +125,13 @@ public class InterconnectionHub : Hub
 
         _clients[clientId] = clientInfo;
         _uuidToId[uuid] = clientId;
+        Controllers.RegistrationController.RemovePendingRegistration(uuid);
 
         _logger.LogInformation("New client registered: ID={ClientId}, UUID={Uuid}, IP={Ip}", clientId, uuid, ipAddress);
         await Clients.Caller.SendAsync("RegistrationSuccess", clientId);
     }
 
-    public Task UpdateHeartbeat(string ipAddress)
+    public Task UpdateHeartbeat()
     {
         var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
         if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var clientId))
@@ -126,8 +140,7 @@ public class InterconnectionHub : Hub
         if (_clients.TryGetValue(clientId, out var clientInfo))
         {
             clientInfo.LastHeartbeat = DateTime.UtcNow;
-            clientInfo.IpAddress = ipAddress;
-            _logger.LogDebug("Heartbeat updated: ID={ClientId}, IP={Ip}", clientId, ipAddress);
+            _logger.LogDebug("Heartbeat updated: ID={ClientId}", clientId);
         }
         
         return Task.CompletedTask;

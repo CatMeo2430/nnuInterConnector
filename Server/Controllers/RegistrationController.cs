@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Hubs;
+using System.Collections.Concurrent;
 
 namespace Server.Controllers;
 
@@ -7,6 +8,7 @@ namespace Server.Controllers;
 [Route("api/[controller]")]
 public class RegistrationController : ControllerBase
 {
+    private static readonly ConcurrentDictionary<string, string> _pendingRegistrations = new();
     private readonly ILogger<RegistrationController> _logger;
 
     public RegistrationController(ILogger<RegistrationController> logger)
@@ -15,7 +17,9 @@ public class RegistrationController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Register([FromHeader(Name = "X-Client-UUID")] string? clientUuid)
+    public IActionResult Register(
+        [FromHeader(Name = "X-Client-UUID")] string? clientUuid,
+        [FromHeader(Name = "X-Client-IP")] string? clientIp)
     {
         if (string.IsNullOrEmpty(clientUuid))
         {
@@ -23,7 +27,25 @@ public class RegistrationController : ControllerBase
             return BadRequest(new { error = "UUID is required" });
         }
 
-        _logger.LogInformation("Client registration request: UUID={Uuid}", clientUuid);
+        if (string.IsNullOrEmpty(clientIp))
+        {
+            _logger.LogWarning("Registration attempt without IP");
+            return BadRequest(new { error = "IP address is required" });
+        }
+
+        _pendingRegistrations[clientUuid] = clientIp;
+        _logger.LogInformation("Client registration request: UUID={Uuid}, IP={Ip}", clientUuid, clientIp);
         return Ok(new { message = "等待WebSocket连接完成注册" });
+    }
+
+    public static string? GetPendingIp(string uuid)
+    {
+        _pendingRegistrations.TryGetValue(uuid, out var ip);
+        return ip;
+    }
+
+    public static void RemovePendingRegistration(string uuid)
+    {
+        _pendingRegistrations.TryRemove(uuid, out _);
     }
 }

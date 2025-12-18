@@ -48,6 +48,7 @@ public class SignalRService
         {
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("X-Client-UUID", _uuid);
+            httpClient.DefaultRequestHeaders.Add("X-Client-IP", _ipAddress);
             
             var response = await httpClient.PostAsync("http://120.55.67.157:8080/api/Registration", null);
             
@@ -151,7 +152,7 @@ public class SignalRService
             OnLogMessage("WebSocket连接成功");
             OnLogMessage("正在注册客户端...");
             
-            await _connection.InvokeAsync("RegisterClient", _uuid, _ipAddress);
+            await _connection.InvokeAsync("RegisterClient", _uuid);
         }
         catch (Exception ex)
         {
@@ -168,7 +169,7 @@ public class SignalRService
             {
                 try
                 {
-                    await _connection.InvokeAsync("UpdateHeartbeat", _ipAddress);
+                    await _connection.InvokeAsync("UpdateHeartbeat");
                 }
                 catch (Exception ex)
                 {
