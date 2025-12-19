@@ -31,9 +31,20 @@ class Program
                     return 1;
             }
         }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            Console.WriteLine($"权限错误: {ex.Message}");
+            Console.WriteLine("请以管理员身份运行此程序");
+            return 1;
+        }
         catch (Exception ex)
         {
             Console.WriteLine($"执行命令时发生错误: {ex.Message}");
+            Console.WriteLine($"错误类型: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"内部错误: {ex.InnerException.Message}");
+            }
             return 1;
         }
     }

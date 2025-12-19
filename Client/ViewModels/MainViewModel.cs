@@ -115,7 +115,19 @@ public partial class MainViewModel : ObservableObject
 
         if (!int.TryParse(TargetId, out var targetId))
         {
-            MessageBox.Show("ID必须是数字", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("ID必须是6位数字", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (targetId < 100000 || targetId > 999999)
+        {
+            MessageBox.Show("ID必须是6位数字（100000-999999）", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (MyId == "未连接")
+        {
+            MessageBox.Show("您尚未连接到服务器，请等待初始化完成", "连接错误", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -125,6 +137,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        LogMessage($"正在请求连接ID {targetId}...");
         await _signalRService.RequestConnectionAsync(targetId);
         TargetId = string.Empty;
     }
@@ -158,6 +171,24 @@ public partial class MainViewModel : ObservableObject
         {
             LogText += $"[{DateTime.Now:HH:mm:ss}] {message}\n";
         });
+    }
+
+    [RelayCommand]
+    private void CopyId()
+    {
+        if (MyId != "未连接" && !string.IsNullOrEmpty(MyId))
+        {
+            try
+            {
+                Clipboard.SetText(MyId);
+                LogMessage("ID已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制ID失败: {ex.Message}");
+                MessageBox.Show($"复制ID失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     public async Task CleanupAsync()

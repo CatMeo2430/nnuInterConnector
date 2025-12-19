@@ -22,7 +22,7 @@ NNU InterConnector 是一个专为校园网环境设计的P2P直连工具，解�
    - 信令服务器，用于辅助发现和IP交换
    - 心跳检测，自动清理离线客户端
    - 内存存储，无数据库依赖
-   - 监听地址: `http://120.55.67.157:8080` (HTTP) + `ws://120.55.67.157:8081` (WebSocket)
+   - 监听地址: `http://10.20.214.145:8080` (HTTP) + `ws://10.20.214.145:8081` (WebSocket)
 
 2. **Client** (WPF桌面应用)
    - 图形化用户界面
@@ -87,8 +87,8 @@ dotnet run
 ```
 
 服务器将监听：
-- HTTP API: `http://120.55.67.157:8080`
-- SignalR Hub: `ws://120.55.67.157:8081`
+- HTTP API: `http://10.20.214.145:8080`
+- SignalR Hub: `ws://10.20.214.145:8081`
 
 #### 2. 构建Helper
 
@@ -116,7 +116,7 @@ cd Server
 dotnet publish -c Release -o publish
 ```
 
-将publish文件夹部署到服务器 `120.55.67.157`
+将publish文件夹部署到服务器 `10.20.214.145`
 
 #### 客户端部署
 
@@ -180,13 +180,13 @@ dotnet publish -c Release -o publish
 
 #### 注册客户端
 ```http
-POST http://120.55.67.157:8080/api/Registration
+POST http://10.20.214.145:8080/api/Registration
 Header: X-Client-UUID: <uuid>
 ```
 
 #### SignalR Hub
 ```
-ws://120.55.67.157:8081/interconnectionHub
+ws://10.20.214.145:8081/interconnectionHub
 Header: X-Client-UUID: <uuid>
 ```
 

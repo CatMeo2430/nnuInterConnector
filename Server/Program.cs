@@ -27,14 +27,19 @@ try
         });
     });
     
+    var serverConfig = builder.Configuration.GetSection("ServerConfig");
+    var ipAddress = IPAddress.Parse(serverConfig["IpAddress"] ?? "10.20.214.145");
+    var httpPort = int.Parse(serverConfig["HttpPort"] ?? "8080");
+    var webSocketPort = int.Parse(serverConfig["WebSocketPort"] ?? "8081");
+    
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.Listen(IPAddress.Any, 8080, listenOptions =>
+        options.Listen(IPAddress.Any, httpPort, listenOptions =>
         {
             listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
         });
         
-        options.Listen(IPAddress.Any, 8081, listenOptions =>
+        options.Listen(IPAddress.Any, webSocketPort, listenOptions =>
         {
             listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
         });
@@ -58,8 +63,8 @@ try
         await hub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
     }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     
-    Log.Information("Server listening on HTTP: http://120.55.67.157:8080");
-    Log.Information("Server listening on WebSocket: ws://120.55.67.157:8081");
+    Log.Information($"Server listening on HTTP: http://{ipAddress}:{httpPort}");
+    Log.Information($"Server listening on WebSocket: ws://{ipAddress}:{webSocketPort}");
     
     app.Run();
 }

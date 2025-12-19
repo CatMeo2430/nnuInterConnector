@@ -26,7 +26,34 @@
                     <TextBlock Text="IP: " FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding MyIp}" FontSize="16" Foreground="#ECF0F1" VerticalAlignment="Center" Margin="5,0,15,0"/>
                     <TextBlock Text="ID: " FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding MyId}" FontSize="18" FontWeight="Bold" Foreground="#3498DB" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    <TextBlock Text="{Binding MyId}" FontSize="18" FontWeight="Bold" Foreground="#3498DB" VerticalAlignment="Center" Margin="5,0,5,0"/>
+                    <Button Content="复制" Width="50" Height="25" FontSize="11" 
+                            Command="{Binding CopyIdCommand}" 
+                            Background="#95A5A6" Foreground="White" 
+                            Padding="5,2" Margin="5,0,15,0"
+                            ToolTip="复制ID到剪贴板">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="3">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#7F8C8D"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
@@ -86,7 +113,17 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="对方ID" Binding="{Binding PeerId}" Width="80"/>
                             <DataGridTextColumn Header="对方IP" Binding="{Binding PeerIp}" Width="120"/>
-                            <DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="80"/>
+                            <DataGridTemplateColumn Header="状态" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Status}" 
+                                                   Foreground="{Binding StatusColor}" 
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="连接时间" Binding="{Binding ConnectedTime, StringFormat='{}{0:MM-dd HH:mm:ss}'}" Width="130"/>
                         </DataGrid.Columns>
                     </DataGrid>
