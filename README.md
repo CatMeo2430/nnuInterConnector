@@ -86,7 +86,7 @@ dotnet run -c Release
 ```json
 {
   "ServerConfig": {
-    "IpAddress": "120.55.67.157",
+    "IpAddress": "10.20.214.145",
     "HttpPort": 8080,
     "WebSocketPort": 8081
   }
@@ -111,7 +111,7 @@ cd Server
 dotnet publish -c Release -o publish
 ```
 
-将publish文件夹部署到服务器 `120.55.67.157`
+将publish文件夹部署到服务器 `10.20.214.145`
 
 #### 客户端部署
 
@@ -178,7 +178,7 @@ Windows会弹出UAC提示，点击"是"授予管理员权限
 
 #### 注册客户端
 ```http
-POST http://120.55.67.157:8080/api/Registration
+POST http://10.20.214.145:8080/api/Registration
 Headers:
   X-Client-UUID: <uuid>
   X-Client-IP: <ip-address>
@@ -188,7 +188,7 @@ Headers:
 
 #### SignalR Hub
 ```
-ws://120.55.67.157:8081/interconnectionHub
+ws://10.20.214.145:8081/interconnectionHub
 Headers:
   X-Client-UUID: <uuid>
 ```
@@ -464,7 +464,7 @@ nnuInterConnector/
 
 ## 许可证
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MPL License - 详见 [LICENSE](LICENSE) 文件
 
 ## 贡献指南
 

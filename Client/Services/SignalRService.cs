@@ -13,19 +13,13 @@ public class SignalRService
     private string _ipAddress = string.Empty;
     private System.Timers.Timer? _heartbeatTimer;
 
+    private const string ServerIpAddress = "10.20.214.145";
+    private const int HttpPort = 8080;
+    private const int WebSocketPort = 8081;
+    
     public SignalRService()
     {
-        try
-        {
-            var serverIp = System.Configuration.ConfigurationManager.AppSettings["ServerIpAddress"] ?? "10.20.214.145";
-            var webSocketPort = System.Configuration.ConfigurationManager.AppSettings["WebSocketPort"] ?? "8081";
-            _serverUrl = $"http://{serverIp}:{webSocketPort}";
-        }
-        catch (Exception ex)
-        {
-            _serverUrl = "http://10.20.214.145:8081";
-            OnLogMessage($"读取配置失败，使用默认地址: {ex.Message}");
-        }
+        _serverUrl = $"http://{ServerIpAddress}:{WebSocketPort}";
     }
 
     public ObservableCollection<ConnectionInfo> Connections { get; } = new();
@@ -44,16 +38,38 @@ public class SignalRService
         try
         {
             _uuid = Guid.NewGuid().ToString();
+            
+            OnLogMessage("正在检测网络环境...");
             _ipAddress = NetworkService.GetCampusNetworkIp();
 
             if (string.IsNullOrEmpty(_ipAddress))
             {
-                OnLogMessage("错误：未检测到校园网IP地址 (10.20.x.x 或 10.30.x.x)");
-                OnLogMessage("请确保已连接到校园网WiFi或有线网络");
+                OnLogMessage("❌ 错误：未检测到校园网IP地址");
+                OnLogMessage("请确保已连接到NNU校园网WiFi或有线网络");
+                OnLogMessage("程序将退出");
+                
+                await Task.Delay(2000);
+                Environment.Exit(1);
                 return;
             }
 
-            OnLogMessage($"检测到校园网IP: {_ipAddress}");
+            OnLogMessage($"✅ 检测到校园网IP: {_ipAddress}");
+            
+            if (_ipAddress.StartsWith("10.20."))
+            {
+                OnLogMessage("检测到10.20网段，正在配置服务器路由...");
+                
+                var routeSuccess = RouteService.AddRoute(ServerIpAddress, "10.20.0.1");
+                if (routeSuccess)
+                {
+                    OnLogMessage($"✅ 服务器路由已配置: {ServerIpAddress} -> 10.20.0.1");
+                }
+                else
+                {
+                    OnLogMessage($"⚠️ 服务器路由配置失败，可能影响连接");
+                }
+            }
+            
             OnLogMessage($"生成客户端UUID: {_uuid}");
 
             await RegisterWithHttpAsync();
@@ -61,7 +77,7 @@ public class SignalRService
         }
         catch (Exception ex)
         {
-            OnLogMessage($"初始化失败: {ex.Message}");
+            OnLogMessage($"❌ 初始化失败: {ex.Message}");
             OnLogMessage("请检查网络连接和服务器配置");
         }
     }
@@ -70,9 +86,7 @@ public class SignalRService
     {
         try
         {
-            var serverIp = System.Configuration.ConfigurationManager.AppSettings["ServerIpAddress"] ?? "10.20.214.145";
-            var httpPort = System.Configuration.ConfigurationManager.AppSettings["HttpPort"] ?? "8080";
-            var httpUrl = $"http://{serverIp}:{httpPort}/api/Registration";
+            var httpUrl = $"http://{ServerIpAddress}:{HttpPort}/api/Registration";
             
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("X-Client-UUID", _uuid);

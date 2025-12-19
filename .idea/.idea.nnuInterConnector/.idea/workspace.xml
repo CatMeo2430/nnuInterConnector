@@ -12,19 +12,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/App.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/App.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Client.csproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/Services/SignalRService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Services/SignalRService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/app.config" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Helper.csproj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Program.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Services/FirewallService.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/Services/RouteService.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Helper/app.manifest" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Server/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nnuInterConnector.sln" beforeDir="false" afterPath="$PROJECT_DIR$/nnuInterConnector.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nnuInterConnector.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/nnuInterConnector.sln.DotSettings.user" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,7 +144,7 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="2925000" />
+      <workItem from="1766149096587" duration="4150000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -189,7 +178,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766145452524</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Alpha 0.1.0.0&#10;重构架构，删除Helper项目，功能整合至Client">
+      <option name="closed" value="true" />
+      <created>1766152397613</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1766152397614</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -214,7 +211,8 @@
     <MESSAGE value="Dev 0.0.0.0&#10;基本框架实现&#10;客户端已成功发送与接收互联请求" />
     <MESSAGE value="Beta 0.0.1.1&#10;IP上报逻辑更改为注册时&#10;Websocket专注于心跳、协商和通知业务" />
     <MESSAGE value="Alpha 0.0.2.1&#10;修复互联状态不符合实际的问题" />
-    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.0.2.1&#10;修复互联状态不符合实际的问题" />
+    <MESSAGE value="Alpha 0.1.0.0&#10;重构架构，删除Helper项目，功能整合至Client" />
+    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.1.0.0&#10;重构架构，删除Helper项目，功能整合至Client" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
