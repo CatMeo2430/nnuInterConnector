@@ -242,79 +242,57 @@ public class SignalRService
 
     private async Task<bool> SetupPeerConnectionAsync(int peerId, string peerIp)
     {
-        try
+        return await Task.Run(() =>
         {
-            var helperPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Helper.exe");
-            if (!System.IO.File.Exists(helperPath))
+            try
             {
-                OnLogMessage("错误: Helper.exe 未找到");
-                OnLogMessage("请确保Helper.exe与客户端在同一目录下");
-                return false;
-            }
-
-            var arguments = $"add {peerIp}";
-            
-            if (NetworkService.IsSameSubnet(_ipAddress, peerIp))
-            {
-                var gateway = NetworkService.GetGatewayForIp(_ipAddress);
-                if (!string.IsNullOrEmpty(gateway))
+                string? gateway = null;
+                if (NetworkService.IsSameSubnet(_ipAddress, peerIp))
                 {
-                    arguments += $" {gateway}";
-                    OnLogMessage($"同网段连接，将配置强制路由 (网关: {gateway})");
-                }
-            }
-            else
-            {
-                OnLogMessage("跨网段连接，无需额外配置");
-            }
-
-            var processStartInfo = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = helperPath,
-                Arguments = arguments,
-                Verb = "runas",
-                UseShellExecute = true,
-                CreateNoWindow = true
-            };
-
-            using var process = System.Diagnostics.Process.Start(processStartInfo);
-            if (process != null)
-            {
-                await process.WaitForExitAsync();
-                if (process.ExitCode == 0)
-                {
-                    OnLogMessage($"✅ Helper配置成功，防火墙已放行 {peerIp}");
-                    if (arguments.Contains("gateway"))
+                    gateway = NetworkService.GetGatewayForIp(_ipAddress);
+                    if (!string.IsNullOrEmpty(gateway))
                     {
-                        OnLogMessage($"✅ 强制路由已配置，可绕过AP隔离");
+                        OnLogMessage($"同网段连接，将配置强制路由 (网关: {gateway})");
                     }
-                    return true;
                 }
                 else
                 {
-                    OnLogMessage($"❌ Helper配置失败，退出码: {process.ExitCode}");
-                    OnLogMessage("请检查：1. 是否具有管理员权限 2. 防火墙设置");
+                    OnLogMessage("跨网段连接，无需额外配置");
+                }
+
+                var firewallSuccess = FirewallService.AddFirewallRule(peerIp);
+                if (!firewallSuccess)
+                {
+                    OnLogMessage($"❌ 防火墙配置失败: {peerIp}");
                     return false;
                 }
+
+                OnLogMessage($"✅ 防火墙已放行 IP: {peerIp}");
+
+                if (!string.IsNullOrEmpty(gateway))
+                {
+                    var routeSuccess = RouteService.AddRoute(peerIp, gateway);
+                    if (routeSuccess)
+                    {
+                        OnLogMessage($"✅ 强制路由已配置: {peerIp} -> {gateway}");
+                    }
+                    else
+                    {
+                        OnLogMessage($"⚠️ 强制路由配置失败: {peerIp}");
+                        FirewallService.RemoveFirewallRule(peerIp);
+                        return false;
+                    }
+                }
+
+                return true;
             }
-            else
+            catch (Exception ex)
             {
-                OnLogMessage("❌ 无法启动Helper进程");
+                OnLogMessage($"❌ 配置连接失败: {ex.Message}");
+                OnLogMessage("请重试或检查系统配置");
                 return false;
             }
-        }
-        catch (System.ComponentModel.Win32Exception ex)
-        {
-            OnLogMessage($"❌ 启动Helper失败: {ex.Message}");
-            OnLogMessage("请检查：1. Helper.exe是否存在 2. 是否有权限运行");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            OnLogMessage($"❌ 配置连接失败: {ex.Message}");
-            OnLogMessage("请重试或检查系统配置");
-            return false;
-        }
+        });
     }
 
     public async Task RequestConnectionAsync(int targetId)
@@ -350,57 +328,45 @@ public class SignalRService
 
     public async Task CleanupPeerConnectionAsync(ConnectionInfo connection)
     {
-        try
+        await Task.Run(() =>
         {
-            App.Current.Dispatcher.Invoke(() =>
+            try
             {
-                connection.Status = "断开中";
-            });
-            
-            OnLogMessage($"正在清理与ID {connection.PeerId} 的本地配置...");
-
-            var helperPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Helper.exe");
-            if (System.IO.File.Exists(helperPath))
-            {
-                var processStartInfo = new System.Diagnostics.ProcessStartInfo
+                App.Current.Dispatcher.Invoke(() =>
                 {
-                    FileName = helperPath,
-                    Arguments = $"remove {connection.PeerIp}",
-                    Verb = "runas",
-                    UseShellExecute = true,
-                    CreateNoWindow = true
-                };
+                    connection.Status = "断开中";
+                });
+                
+                OnLogMessage($"正在清理与ID {connection.PeerId} 的本地配置...");
 
-                using var process = System.Diagnostics.Process.Start(processStartInfo);
-                if (process != null)
+                var firewallSuccess = FirewallService.RemoveFirewallRule(connection.PeerIp);
+                var routeSuccess = RouteService.RemoveRoute(connection.PeerIp);
+
+                if (firewallSuccess || routeSuccess)
                 {
-                    await process.WaitForExitAsync();
-                    if (process.ExitCode == 0)
-                    {
-                        OnLogMessage($"✅ 已删除 {connection.PeerIp} 的防火墙规则和路由配置");
-                    }
-                    else
-                    {
-                        OnLogMessage($"⚠️ 清理配置时遇到问题，退出码: {process.ExitCode}");
-                    }
+                    OnLogMessage($"✅ 已删除 {connection.PeerIp} 的防火墙规则和路由配置");
                 }
+                else
+                {
+                    OnLogMessage($"⚠️ 清理配置时遇到问题: {connection.PeerIp}");
+                }
+
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    Connections.Remove(connection);
+                });
+
+                OnLogMessage($"已清理与ID {connection.PeerId} 的本地配置");
             }
-
-            App.Current.Dispatcher.Invoke(() =>
+            catch (Exception ex)
             {
-                Connections.Remove(connection);
-            });
-
-            OnLogMessage($"已清理与ID {connection.PeerId} 的本地配置");
-        }
-        catch (Exception ex)
-        {
-            OnLogMessage($"❌ 清理配置失败: {ex.Message}");
-            App.Current.Dispatcher.Invoke(() =>
-            {
-                connection.Status = "错误";
-            });
-        }
+                OnLogMessage($"❌ 清理配置失败: {ex.Message}");
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    connection.Status = "错误";
+                });
+            }
+        });
     }
 
     public async Task DisconnectPeerAsync(ConnectionInfo connection)
@@ -418,31 +384,16 @@ public class SignalRService
                 await _connection.InvokeAsync("DisconnectPeer", connection.PeerId);
             }
 
-            var helperPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Helper.exe");
-            if (System.IO.File.Exists(helperPath))
-            {
-                var processStartInfo = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = helperPath,
-                    Arguments = $"remove {connection.PeerIp}",
-                    Verb = "runas",
-                    UseShellExecute = true,
-                    CreateNoWindow = true
-                };
+            var firewallSuccess = FirewallService.RemoveFirewallRule(connection.PeerIp);
+            var routeSuccess = RouteService.RemoveRoute(connection.PeerIp);
 
-                using var process = System.Diagnostics.Process.Start(processStartInfo);
-                if (process != null)
-                {
-                    await process.WaitForExitAsync();
-                    if (process.ExitCode == 0)
-                    {
-                        OnLogMessage($"✅ 已删除 {connection.PeerIp} 的防火墙规则和路由配置");
-                    }
-                    else
-                    {
-                        OnLogMessage($"⚠️ 清理配置时遇到问题，退出码: {process.ExitCode}");
-                    }
-                }
+            if (firewallSuccess || routeSuccess)
+            {
+                OnLogMessage($"✅ 已删除 {connection.PeerIp} 的防火墙规则和路由配置");
+            }
+            else
+            {
+                OnLogMessage($"⚠️ 清理配置时遇到问题: {connection.PeerIp}");
             }
 
             App.Current.Dispatcher.Invoke(() =>

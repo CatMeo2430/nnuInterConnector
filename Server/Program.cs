@@ -55,12 +55,19 @@ try
     
     var cleanupTimer = new System.Threading.Timer(async _ =>
     {
-        using var scope = app.Services.CreateScope();
-        var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<InterconnectionHub>>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<InterconnectionHub>>();
-        
-        var hub = new InterconnectionHub(logger, hubContext);
-        await hub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<InterconnectionHub>>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<InterconnectionHub>>();
+            
+            var hub = new InterconnectionHub(logger, hubContext);
+            await hub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "清理非活动客户端时发生错误");
+        }
     }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     
     Log.Information($"Server listening on HTTP: http://{ipAddress}:{httpPort}");
