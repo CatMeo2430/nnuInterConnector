@@ -26,7 +26,6 @@ public partial class ConnectionProgressWindow : Window
         StatusText.Text = "准备就绪";
         TargetIdTextBox.IsEnabled = true;
         StartButton.IsEnabled = true;
-        CancelButton.IsEnabled = false;
     }
 
     private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -62,7 +61,6 @@ public partial class ConnectionProgressWindow : Window
     {
         TargetIdTextBox.IsEnabled = false;
         StartButton.IsEnabled = false;
-        CancelButton.IsEnabled = true;
 
         UpdateProgress(0, "正在初始化...");
         await Task.Delay(300);
@@ -84,8 +82,9 @@ public partial class ConnectionProgressWindow : Window
         await Task.Delay(1000);
 
         UpdateProgress(100, "连接成功！");
-        CancelButton.IsEnabled = false;
-        CloseButton.Content = "完成";
+        await Task.Delay(500);
+        
+        Close();
     }
 
     private void UpdateProgress(double value, string status)
@@ -97,9 +96,9 @@ public partial class ConnectionProgressWindow : Window
         }, DispatcherPriority.Render);
     }
 
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
-        ResetProgress();
+        WindowState = WindowState.Minimized;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
