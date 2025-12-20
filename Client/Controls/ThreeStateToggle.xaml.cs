@@ -52,15 +52,32 @@ public partial class ThreeStateToggle : UserControl
 
     private void OnMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        var newState = CurrentState switch
+        var position = e.GetPosition(this);
+        var width = ActualWidth;
+        
+        if (width == 0) return;
+        
+        var sectionWidth = width / 3;
+        
+        ConnectionMode newState;
+        
+        if (position.X < sectionWidth)
         {
-            ConnectionMode.Manual => ConnectionMode.AutoReject,
-            ConnectionMode.AutoReject => ConnectionMode.AutoAccept,
-            ConnectionMode.AutoAccept => ConnectionMode.Manual,
-            _ => ConnectionMode.Manual
-        };
+            newState = ConnectionMode.Manual;
+        }
+        else if (position.X < sectionWidth * 2)
+        {
+            newState = ConnectionMode.AutoReject;
+        }
+        else
+        {
+            newState = ConnectionMode.AutoAccept;
+        }
 
-        CurrentState = newState;
+        if (newState != CurrentState)
+        {
+            CurrentState = newState;
+        }
     }
 
     private void UpdateVisualState(ConnectionMode state, bool animate)
