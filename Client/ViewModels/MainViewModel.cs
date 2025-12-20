@@ -309,27 +309,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void SetManualMode()
-    {
-        ConnectionMode = ConnectionMode.Manual;
-        LogMessage("连接模式切换为：手动控制");
-    }
-
-    [RelayCommand]
-    private void SetAutoAcceptMode()
-    {
-        ConnectionMode = ConnectionMode.AutoAccept;
-        LogMessage("连接模式切换为：自动接受");
-    }
-
-    [RelayCommand]
-    private void SetAutoRejectMode()
-    {
-        ConnectionMode = ConnectionMode.AutoReject;
-        LogMessage("连接模式切换为：自动拒绝");
-    }
-
     public async Task CleanupAsync()
     {
         await _signalRService.DisposeAsync();
