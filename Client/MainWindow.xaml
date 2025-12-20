@@ -165,181 +165,126 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Text="已建立的连接" FontSize="16" FontWeight="Bold" Foreground="#333333" Margin="0,0,0,15"/>
 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <Grid Grid.Row="1" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.6*" MinWidth="70"/>
+                        <ColumnDefinition Width="1.0*" MinWidth="110"/>
+                        <ColumnDefinition Width="*" MinWidth="80"/>
+                        <ColumnDefinition Width="1.2*" MinWidth="120"/>
+                        <ColumnDefinition Width="120"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="#F5F5F5" CornerRadius="4,0,0,4" BorderBrush="#E0E0E0" BorderThickness="1,1,0,1" Padding="8,8">
+                        <TextBlock Text="ID" FontSize="13" FontWeight="Bold" Foreground="#555555" HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="8,8">
+                        <TextBlock Text="IP" FontSize="13" FontWeight="Bold" Foreground="#555555" HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="8,8">
+                        <TextBlock Text="状态" FontSize="13" FontWeight="Bold" Foreground="#555555" HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <Border Grid.Column="3" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="0,1,0,1" Padding="8,8">
+                        <TextBlock Text="建立时间" FontSize="13" FontWeight="Bold" Foreground="#555555" HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <Border Grid.Column="4" Background="#F5F5F5" CornerRadius="0,4,4,0" BorderBrush="#E0E0E0" BorderThickness="0,1,1,1" Padding="8,8">
+                        <TextBlock Text="操作" FontSize="13" FontWeight="Bold" Foreground="#555555" HorizontalAlignment="Center"/>
+                    </Border>
+                </Grid>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Connections}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#FAFBFC" CornerRadius="10" Padding="16" Margin="0,0,0,12" BorderBrush="#E8E8E8" BorderThickness="1">
+                                <Border Background="#FAFBFC" CornerRadius="6" Margin="0,0,0,8" BorderBrush="#E8E8E8" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="0.6*" MinWidth="70"/>
+                                            <ColumnDefinition Width="1.0*" MinWidth="110"/>
+                                            <ColumnDefinition Width="*" MinWidth="80"/>
+                                            <ColumnDefinition Width="1.2*" MinWidth="120"/>
+                                            <ColumnDefinition Width="120"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border Background="#E3F2FD" CornerRadius="8" Padding="12,8" Margin="0,0,10,0">
-                                                <Button Content="{Binding PeerId, StringFormat='ID: {0}'}" 
-                                                        Command="{Binding DataContext.CopyPeerIdCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding PeerId}"
-                                                        FontSize="14" 
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#1565C0"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        ToolTip="点击复制ID">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button">
-                                                            <Setter Property="Template">
-                                                                <Setter.Value>
-                                                                    <ControlTemplate TargetType="Button">
-                                                                        <Border Background="{TemplateBinding Background}" 
-                                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                                CornerRadius="8">
-                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                    </ControlTemplate>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Background" Value="#BBDEFB"/>
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </Border>
-
-                                            <Border Background="#F3E5F5" CornerRadius="8" Padding="12,8" Margin="0,0,10,0">
-                                                <Button Content="{Binding PeerIp, StringFormat='IP: {0}'}" 
-                                                        Command="{Binding DataContext.CopyPeerIpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding PeerIp}"
-                                                        FontSize="14" 
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#6A1B9A"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        ToolTip="点击复制IP">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button">
-                                                            <Setter Property="Template">
-                                                                <Setter.Value>
-                                                                    <ControlTemplate TargetType="Button">
-                                                                        <Border Background="{TemplateBinding Background}" 
-                                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                                CornerRadius="8">
-                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                    </ControlTemplate>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Background" Value="#E1BEE7"/>
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </Border>
-
-                                            <Border Background="#E8F5E9" CornerRadius="8" Padding="12,8" Margin="0,0,10,0">
-                                                <Button Content="{Binding Status}" 
-                                                        Command="{Binding DataContext.CopyStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding Status}"
-                                                        FontSize="14" 
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#2E7D32"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        ToolTip="点击复制状态">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button">
-                                                            <Setter Property="Template">
-                                                                <Setter.Value>
-                                                                    <ControlTemplate TargetType="Button">
-                                                                        <Border Background="{TemplateBinding Background}" 
-                                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                                CornerRadius="8">
-                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                    </ControlTemplate>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Background" Value="#C8E6C9"/>
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </Border>
-
-                                            <Border Background="#FFF3E0" CornerRadius="8" Padding="12,8" Margin="0,0,0,0">
-                                                <Button Content="{Binding ConnectedTime, StringFormat='{}{0:MM-dd HH:mm:ss}'}" 
-                                                        Command="{Binding DataContext.CopyTimeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding ConnectedTime}"
-                                                        FontSize="14" 
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#EF6C00"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        ToolTip="点击复制连接时间">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button">
-                                                            <Setter Property="Template">
-                                                                <Setter.Value>
-                                                                    <ControlTemplate TargetType="Button">
-                                                                        <Border Background="{TemplateBinding Background}" 
-                                                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                                                CornerRadius="8">
-                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                    </ControlTemplate>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Background" Value="#FFE0B2"/>
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </Border>
-                                        </StackPanel>
+                                        <Button Grid.Column="0" 
+                                                Command="{Binding DataContext.CopyPeerIdCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding PeerId}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="8,10"
+                                                HorizontalContentAlignment="Center"
+                                                ToolTip="点击复制ID">
+                                            <Button.Content>
+                                                <TextBlock Text="{Binding PeerId}" FontSize="14" FontWeight="SemiBold" Foreground="#1565C0"/>
+                                            </Button.Content>
+                                        </Button>
 
                                         <Button Grid.Column="1" 
+                                                Command="{Binding DataContext.CopyPeerIpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding PeerIp}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="8,10"
+                                                HorizontalContentAlignment="Center"
+                                                ToolTip="点击复制IP">
+                                            <Button.Content>
+                                                <TextBlock Text="{Binding PeerIp}" FontSize="14" FontWeight="SemiBold" Foreground="#6A1B9A"/>
+                                            </Button.Content>
+                                        </Button>
+
+                                        <Button Grid.Column="2" 
+                                                Command="{Binding DataContext.CopyStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding Status}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="8,10"
+                                                HorizontalContentAlignment="Center"
+                                                ToolTip="点击复制状态">
+                                            <Button.Content>
+                                                <TextBlock Text="{Binding Status}" FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32"/>
+                                            </Button.Content>
+                                        </Button>
+
+                                        <Button Grid.Column="3" 
+                                                Command="{Binding DataContext.CopyTimeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding ConnectedTime}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="8,10"
+                                                HorizontalContentAlignment="Center"
+                                                ToolTip="点击复制时间">
+                                            <Button.Content>
+                                                <TextBlock Text="{Binding ConnectedTime, StringFormat='{}{0:MM-dd HH:mm:ss}'}" FontSize="14" FontWeight="SemiBold" Foreground="#EF6C00"/>
+                                            </Button.Content>
+                                        </Button>
+
+                                        <Button Grid.Column="4" 
                                                 Command="{Binding DataContext.DisconnectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"
                                                 Background="#E74C3C"
                                                 Foreground="White"
                                                 FontSize="13"
                                                 FontWeight="SemiBold"
-                                                Padding="16,8"
-                                                Height="36"
+                                                Padding="20,10"
+                                                Margin="0"
+                                                BorderThickness="0"
                                                 ToolTip="断开此连接">
                                             <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <Style TargetType="Button">
                                                     <Setter Property="Template">
                                                         <Setter.Value>
                                                             <ControlTemplate TargetType="Button">
                                                                 <Border Background="{TemplateBinding Background}" 
-                                                                        CornerRadius="8"
+                                                                        CornerRadius="0,6,6,0"
                                                                         BorderBrush="{TemplateBinding BorderBrush}"
                                                                         BorderThickness="{TemplateBinding BorderThickness}">
                                                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -347,8 +292,14 @@
                                                             </ControlTemplate>
                                                         </Setter.Value>
                                                     </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#C0392B"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
                                                 </Style>
                                             </Button.Style>
+                                            断开
                                         </Button>
                                     </Grid>
                                 </Border>
