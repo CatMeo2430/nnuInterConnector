@@ -147,17 +147,16 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <TextBox Text="{Binding TargetId, UpdateSourceTrigger=PropertyChanged}" 
-                             Width="150" Height="36" 
-                             FontSize="14" 
-                             Padding="10,5" 
-                             Margin="0,0,10,0"
-                             VerticalContentAlignment="Center"
-                             ToolTip="输入对方的6位ID"/>
-                    <Button Content="连接" 
-                            Command="{Binding ConnectToPeerCommand}" 
-                            Margin="0,0,0,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding InitiateConnectionCommand}" 
+                            Style="{StaticResource ModernButtonStyle}"
+                            Height="40" 
+                            Padding="20,0"
+                            ToolTip="发起新的互联请求">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="发起互联" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

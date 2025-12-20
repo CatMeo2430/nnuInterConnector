@@ -105,6 +105,13 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void InitiateConnection()
+    {
+        var progressWindow = new ConnectionProgressWindow(_signalRService, this);
+        progressWindow.Show();
+    }
+
+    [RelayCommand]
     private async Task ConnectToPeer()
     {
         if (string.IsNullOrWhiteSpace(TargetId))
