@@ -12,10 +12,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/App.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/App.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/App.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/App.xaml.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -147,7 +144,7 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="10553000" />
+      <workItem from="1766149096587" duration="11655000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -197,7 +194,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766153532622</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Dev 0.1.1.1-1&#10;美化GUI">
+      <option name="closed" value="true" />
+      <created>1766198057053</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1766198057053</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -224,7 +229,8 @@
     <MESSAGE value="Alpha 0.0.2.1&#10;修复互联状态不符合实际的问题" />
     <MESSAGE value="Alpha 0.1.0.0&#10;重构架构，删除Helper项目，功能整合至Client" />
     <MESSAGE value="Dev 0.1.0.1&#10;修正README.md&#10;修复10.20网段无法连接服务器的问题" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.0.1&#10;修正README.md&#10;修复10.20网段无法连接服务器的问题" />
+    <MESSAGE value="Dev 0.1.1.1-1&#10;美化GUI" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.1.1-1&#10;美化GUI" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

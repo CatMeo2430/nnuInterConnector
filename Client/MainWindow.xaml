@@ -76,14 +76,75 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="IP: " FontSize="14" FontWeight="Bold" Foreground="#333333" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding MyIp}" FontSize="14" Foreground="#666666" VerticalAlignment="Center" Margin="5,0,15,0"/>
-                    <TextBlock Text="ID: " FontSize="14" FontWeight="Bold" Foreground="#333333" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding MyId}" FontSize="16" FontWeight="Bold" Foreground="#0078D4" VerticalAlignment="Center" Margin="5,0,5,0"/>
-                    <Button Content="复制" Width="60" Height="28" FontSize="11" 
-                            Command="{Binding CopyIdCommand}" 
-                            Background="#4CAF50" Margin="10,0,0,0"
-                            ToolTip="复制ID到剪贴板"/>
+                    <TextBlock Text="IP: " FontSize="14" FontWeight="Medium" Foreground="#555555" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Border Background="#E3F2FD" CornerRadius="6" Padding="0">
+                        <Button Content="{Binding MyIp}" 
+                                Command="{Binding CopyIpCommand}" 
+                                FontSize="15" 
+                                FontWeight="SemiBold"
+                                Foreground="#1565C0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="10,6"
+                                ToolTip="点击复制IP地址">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#BBDEFB"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+                    
+                    <TextBlock Text="ID: " FontSize="14" FontWeight="Medium" Foreground="#555555" VerticalAlignment="Center" Margin="20,0,8,0"/>
+                    <Border Background="#E8F5E9" CornerRadius="6" Padding="0">
+                        <Button Content="{Binding MyId}" 
+                                Command="{Binding CopyIdCommand}" 
+                                FontSize="16" 
+                                FontWeight="Bold"
+                                Foreground="#2E7D32"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="10,6"
+                                ToolTip="点击复制ID">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#C8E6C9"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">

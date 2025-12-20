@@ -191,6 +191,24 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void CopyIp()
+    {
+        if (!string.IsNullOrEmpty(MyIp) && MyIp != "检测中...")
+        {
+            try
+            {
+                Clipboard.SetText(MyIp);
+                LogMessage("IP已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制IP失败: {ex.Message}");
+                MessageBox.Show($"复制IP失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
     public async Task CleanupAsync()
     {
         await _signalRService.DisposeAsync();
