@@ -1,5 +1,8 @@
 using Client.Services;
 using Client.ViewModels;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -11,12 +14,20 @@ public partial class ConnectionProgressWindow : Window
     private int _targetId;
     private readonly SignalRService _signalRService;
     private readonly MainViewModel _mainViewModel;
+    private bool _isConnecting = false;
+    private TaskCompletionSource<bool> _connectionResult = new TaskCompletionSource<bool>();
 
     public ConnectionProgressWindow(SignalRService signalRService, MainViewModel mainViewModel)
     {
         InitializeComponent();
         _signalRService = signalRService;
         _mainViewModel = mainViewModel;
+        
+        // 订阅连接失败事件
+        _signalRService.ConnectionFailed += OnConnectionFailed;
+        _signalRService.ConnectionRejected += OnConnectionRejected;
+        _signalRService.ConnectionEstablished += OnConnectionEstablished;
+        
         ResetProgress();
     }
 
@@ -26,6 +37,8 @@ public partial class ConnectionProgressWindow : Window
         StatusText.Text = "准备就绪";
         TargetIdTextBox.IsEnabled = true;
         StartButton.IsEnabled = true;
+        _isConnecting = false;
+        _connectionResult = new TaskCompletionSource<bool>();
     }
 
     private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -59,32 +72,128 @@ public partial class ConnectionProgressWindow : Window
 
     private async void StartConnection()
     {
+        _isConnecting = true;
         TargetIdTextBox.IsEnabled = false;
         StartButton.IsEnabled = false;
 
-        UpdateProgress(0, "正在初始化...");
-        await Task.Delay(300);
+        try
+        {
+            // 步骤1: 发送连接请求
+            UpdateProgress(0, "正在发送连接请求...");
+            await _signalRService.RequestConnectionAsync(_targetId);
+            UpdateProgress(20, "连接请求已发送，等待响应...");
 
-        UpdateProgress(15, "正在发送连接请求...");
-        await _signalRService.RequestConnectionAsync(_targetId);
-        await Task.Delay(500);
+            // 步骤2: 等待对方响应（接受或拒绝）
+            UpdateProgress(30, "等待对方确认...");
+            var connectionSuccess = await WaitForConnectionResponse();
+            
+            if (!connectionSuccess)
+            {
+                UpdateProgress(0, "连接失败");
+                ResetProgress();
+                return;
+            }
 
-        UpdateProgress(30, "等待对方确认...");
-        await Task.Delay(2000);
+            // 步骤3: 等待连接建立和配置完成
+            UpdateProgress(60, "正在配置网络和防火墙...");
+            var setupSuccess = await WaitForSetupCompletion();
+            
+            if (!setupSuccess)
+            {
+                UpdateProgress(0, "配置失败");
+                StatusText.Text = "配置失败，请检查系统权限";
+                await Task.Delay(2000);
+                Close();
+                return;
+            }
 
-        UpdateProgress(50, "正在配置防火墙规则...");
-        await Task.Delay(1000);
+            // 步骤4: 完成
+            UpdateProgress(100, "连接成功！");
+            await Task.Delay(1000);
+            Close();
+        }
+        catch (Exception ex)
+        {
+            UpdateProgress(0, $"错误: {ex.Message}");
+            StatusText.Text = $"发生错误: {ex.Message}";
+            await Task.Delay(3000);
+            ResetProgress();
+        }
+    }
 
-        UpdateProgress(70, "正在配置强制路由...");
-        await Task.Delay(1000);
-
-        UpdateProgress(85, "正在测试连接...");
-        await Task.Delay(1000);
-
-        UpdateProgress(100, "连接成功！");
-        await Task.Delay(500);
+    private async Task<bool> WaitForConnectionResponse()
+    {
+        // 等待连接结果（成功、失败或被拒绝）
+        var delayTask = Task.Delay(30000); // 30秒超时
+        var completedTask = await Task.WhenAny(_connectionResult.Task, delayTask);
         
-        Close();
+        if (completedTask == delayTask)
+        {
+            // 超时
+            return false;
+        }
+        
+        return await _connectionResult.Task;
+    }
+
+    private async Task<bool> WaitForSetupCompletion()
+    {
+        // 等待3秒让SetupPeerConnectionAsync完成
+        await Task.Delay(3000);
+        
+        // 检查是否已连接
+        var connection = _signalRService.Connections.FirstOrDefault(c => c.PeerId == _targetId);
+        return connection?.Status == "已连接";
+    }
+
+    private void OnConnectionFailed(object? sender, int errorCode)
+    {
+        if (!_isConnecting) return;
+        
+        string errorMessage = errorCode switch
+        {
+            1 => "目标ID不存在",
+            2 => "目标不在线",
+            3 => "连接超时",
+            _ => "未知错误"
+        };
+        
+        Dispatcher.BeginInvoke(() =>
+        {
+            StatusText.Text = $"连接失败: {errorMessage}";
+            UpdateProgress(0, "连接失败");
+        });
+        
+        _connectionResult.TrySetResult(false);
+    }
+
+    private void OnConnectionRejected(object? sender, int rejecterId)
+    {
+        if (!_isConnecting) return;
+        
+        Dispatcher.BeginInvoke(() =>
+        {
+            StatusText.Text = $"ID {rejecterId} 拒绝了您的连接请求";
+            UpdateProgress(0, "连接被拒绝");
+        });
+        
+        _connectionResult.TrySetResult(false);
+    }
+
+    private void OnConnectionEstablished(object? sender, (int, string) e)
+    {
+        if (!_isConnecting) return;
+        
+        var (peerId, peerIp) = e;
+        if (peerId == _targetId)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                UpdateProgress(50, "连接已建立，正在配置...");
+            });
+            
+            _connectionResult.TrySetResult(true);
+        }
     }
 
     private void UpdateProgress(double value, string status)
@@ -103,6 +212,19 @@ public partial class ConnectionProgressWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
+        // 取消订阅事件
+        _signalRService.ConnectionFailed -= OnConnectionFailed;
+        _signalRService.ConnectionRejected -= OnConnectionRejected;
+        _signalRService.ConnectionEstablished -= OnConnectionEstablished;
         Close();
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // 取消订阅事件
+        _signalRService.ConnectionFailed -= OnConnectionFailed;
+        _signalRService.ConnectionRejected -= OnConnectionRejected;
+        _signalRService.ConnectionEstablished -= OnConnectionEstablished;
+        base.OnClosing(e);
     }
 }

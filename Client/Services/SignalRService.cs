@@ -28,6 +28,7 @@ public class SignalRService
     public event EventHandler<(int, string)>? ConnectionRequestReceived;
     public event EventHandler<(int, string)>? ConnectionEstablished;
     public event EventHandler<int>? ConnectionRejected;
+    public event EventHandler<int>? ConnectionFailed;
 
     public int? ClientId { get; private set; }
     public string IpAddress => _ipAddress;
@@ -166,6 +167,7 @@ public class SignalRService
         _connection.On<int>("ConnectionFailed", message =>
         {
             OnLogMessage($"连接失败: {message}");
+            ConnectionFailed?.Invoke(this, message);
         });
 
         _connection.On<int>("ConnectionRejected", rejecterId =>
