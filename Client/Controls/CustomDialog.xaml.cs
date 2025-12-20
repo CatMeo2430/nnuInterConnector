@@ -7,7 +7,12 @@ namespace Client.Controls;
 
 public partial class CustomDialog : Window
 {
-    public bool? DialogResult { get; private set; }
+    private bool? _dialogResult;
+    public new bool? DialogResult 
+    { 
+        get => _dialogResult; 
+        private set => _dialogResult = value; 
+    }
 
     public CustomDialog(string title, string message, bool showCancelButton = true)
     {
@@ -26,12 +31,14 @@ public partial class CustomDialog : Window
     private void ConfirmButton_Click(object sender, RoutedEventArgs e)
     {
         DialogResult = true;
+        base.DialogResult = true;
         Close();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
+        base.DialogResult = false;
         Close();
     }
 
