@@ -1,24 +1,25 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
 
 namespace Client.Controls;
 
 public partial class CustomDialog : Window
 {
     private bool? _dialogResult;
+    private bool _isModal = false;
+    
     public new bool? DialogResult 
     { 
         get => _dialogResult; 
         private set => _dialogResult = value; 
     }
 
-    public CustomDialog(string title, string message, bool showCancelButton = true)
+    public CustomDialog(string title, string message, bool showCancelButton = true, bool isModal = false)
     {
         InitializeComponent();
-        TitleText.Text = title;
+        Title = title;
         MessageText.Text = message;
+        _isModal = isModal;
         
         if (!showCancelButton)
         {
@@ -42,10 +43,18 @@ public partial class CustomDialog : Window
         Close();
     }
 
-    public static bool? Show(string title, string message, bool showCancelButton = true)
+    // 模态对话框（阻塞式，需要返回值）
+    public static bool? ShowModal(string title, string message, bool showCancelButton = true)
     {
-        var dialog = new CustomDialog(title, message, showCancelButton);
+        var dialog = new CustomDialog(title, message, showCancelButton, true);
         dialog.ShowDialog();
         return dialog.DialogResult;
+    }
+    
+    // 非模态对话框（非阻塞式，不返回值）
+    public static void Show(string title, string message, bool showCancelButton = true)
+    {
+        var dialog = new CustomDialog(title, message, showCancelButton, false);
+        dialog.Show();
     }
 }

@@ -46,24 +46,28 @@ public partial class ConnectionProgressWindow : Window
         if (string.IsNullOrWhiteSpace(TargetIdTextBox.Text))
         {
             Controls.CustomDialog.Show("输入错误", "请输入对方ID", false);
+            Close();
             return;
         }
 
         if (!int.TryParse(TargetIdTextBox.Text, out _targetId))
         {
             Controls.CustomDialog.Show("输入错误", "ID必须是数字", false);
+            Close();
             return;
         }
 
         if (_targetId < 100000 || _targetId > 999999)
         {
             Controls.CustomDialog.Show("输入错误", "ID必须是6位数字（100000-999999）", false);
+            Close();
             return;
         }
 
         if (_targetId.ToString() == _mainViewModel.MyId)
         {
             Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
+            Close();
             return;
         }
 
@@ -162,6 +166,8 @@ public partial class ConnectionProgressWindow : Window
         {
             StatusText.Text = $"连接失败: {errorMessage}";
             UpdateProgress(0, "连接失败");
+            // 延迟关闭窗口，让用户看到错误信息
+            Task.Delay(2000).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
         });
         
         _connectionResult.TrySetResult(false);
@@ -175,6 +181,8 @@ public partial class ConnectionProgressWindow : Window
         {
             StatusText.Text = $"ID {rejecterId} 拒绝了您的连接请求";
             UpdateProgress(0, "连接被拒绝");
+            // 延迟关闭窗口，让用户看到错误信息
+            Task.Delay(2000).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
         });
         
         _connectionResult.TrySetResult(false);

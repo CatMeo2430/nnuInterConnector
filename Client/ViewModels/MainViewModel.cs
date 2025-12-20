@@ -16,6 +16,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly SignalRService _signalRService;
     private readonly string _logFilePath;
+    private ConnectionProgressWindow? _currentProgressWindow;
 
     [ObservableProperty]
     private string _myId = "未连接";
@@ -159,9 +160,9 @@ public partial class MainViewModel : ObservableObject
             switch (ConnectionMode)
             {
                 case ConnectionMode.Manual:
-                    var result = Controls.CustomDialog.Show(
+                    var result = Controls.CustomDialog.ShowModal(
                         "连接请求",
-                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？"
+                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n是否接受？"
                     );
 
                     if (result == true)
@@ -193,19 +194,35 @@ public partial class MainViewModel : ObservableObject
     {
         var (peerId, peerIp) = e;
         LogMessage($"与 ID {peerId} 的连接已建立");
+        
+        // 关闭当前的连接进度窗口
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            _currentProgressWindow?.Close();
+            _currentProgressWindow = null;
+        });
     }
 
     private void OnConnectionRejected(object? sender, int e)
     {
         LogMessage($"ID {e} 拒绝了您的连接请求");
+        // 显示非模态对话框
         Controls.CustomDialog.Show("连接失败", $"ID {e} 拒绝了您的连接请求", false);
+        
+        // 关闭当前的连接进度窗口
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            _currentProgressWindow?.Close();
+            _currentProgressWindow = null;
+        });
     }
 
     [RelayCommand]
     private void InitiateConnection()
     {
-        var progressWindow = new ConnectionProgressWindow(_signalRService, this);
-        progressWindow.Show();
+        _currentProgressWindow = new ConnectionProgressWindow(_signalRService, this);
+        _currentProgressWindow.Closed += (s, e) => _currentProgressWindow = null;
+        _currentProgressWindow.Show();
     }
 
     [RelayCommand]
@@ -242,6 +259,12 @@ public partial class MainViewModel : ObservableObject
         }
 
         LogMessage($"正在请求连接ID {targetId}...");
+        
+        // 创建并显示连接进度窗口
+        _currentProgressWindow = new ConnectionProgressWindow(_signalRService, this);
+        _currentProgressWindow.Closed += (s, e) => _currentProgressWindow = null;
+        _currentProgressWindow.Show();
+        
         await _signalRService.RequestConnectionAsync(targetId);
         TargetId = string.Empty;
     }
@@ -251,7 +274,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is ConnectionInfo connection)
         {
-            var result = Controls.CustomDialog.Show(
+            var result = Controls.CustomDialog.ShowModal(
                 "确认断开",
                 $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。"
             );
