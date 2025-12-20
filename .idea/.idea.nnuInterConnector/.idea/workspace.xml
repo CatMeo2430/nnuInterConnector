@@ -12,7 +12,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -144,7 +144,8 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="36233000" />
+      <workItem from="1766149096587" duration="37327000" />
+      <workItem from="1766234514868" duration="475000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -282,7 +283,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766231921249</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Dev 0.1.3.0 - 1&#10;删除日志区域">
+      <option name="closed" value="true" />
+      <created>1766233555460</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1766233555460</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -320,7 +329,8 @@
     <MESSAGE value="Dev 0.1.2.1&#10;增加互联请求接受模式" />
     <MESSAGE value="Dev 0.1.2.1-1&#10;修正互联请求接受模式" />
     <MESSAGE value="Alpha 0.1.2.1&#10;美化GUI，调整元素大小" />
-    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.1.2.1&#10;美化GUI，调整元素大小" />
+    <MESSAGE value="Dev 0.1.3.0 - 1&#10;删除日志区域" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.3.0 - 1&#10;删除日志区域" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

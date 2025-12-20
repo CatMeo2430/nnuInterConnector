@@ -159,14 +159,12 @@ public partial class MainViewModel : ObservableObject
             switch (ConnectionMode)
             {
                 case ConnectionMode.Manual:
-                    var result = MessageBox.Show(
-                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？",
+                    var result = Controls.CustomDialog.Show(
                         "连接请求",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question
+                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？"
                     );
 
-                    if (result == MessageBoxResult.Yes)
+                    if (result == true)
                     {
                         await _signalRService.AcceptConnectionAsync(requesterId);
                         LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
@@ -200,7 +198,7 @@ public partial class MainViewModel : ObservableObject
     private void OnConnectionRejected(object? sender, int e)
     {
         LogMessage($"ID {e} 拒绝了您的连接请求");
-        MessageBox.Show($"ID {e} 拒绝了您的连接请求", "连接失败", MessageBoxButton.OK, MessageBoxImage.Information);
+        Controls.CustomDialog.Show("连接失败", $"ID {e} 拒绝了您的连接请求", false);
     }
 
     [RelayCommand]
@@ -215,31 +213,31 @@ public partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(TargetId))
         {
-            MessageBox.Show("请输入目标ID", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "请输入目标ID", false);
             return;
         }
 
         if (!int.TryParse(TargetId, out var targetId))
         {
-            MessageBox.Show("ID必须是6位数字", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "ID必须是6位数字", false);
             return;
         }
 
         if (targetId < 100000 || targetId > 999999)
         {
-            MessageBox.Show("ID必须是6位数字（100000-999999）", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "ID必须是6位数字（100000-999999）", false);
             return;
         }
 
         if (MyId == "未连接")
         {
-            MessageBox.Show("您尚未连接到服务器，请等待初始化完成", "连接错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("连接错误", "您尚未连接到服务器，请等待初始化完成", false);
             return;
         }
 
         if (targetId.ToString() == MyId)
         {
-            MessageBox.Show("不能连接到自己", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
             return;
         }
 
@@ -253,14 +251,12 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is ConnectionInfo connection)
         {
-            var result = MessageBox.Show(
-                $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。",
+            var result = Controls.CustomDialog.Show(
                 "确认断开",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question
+                $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。"
             );
 
-            if (result == MessageBoxResult.Yes)
+            if (result == true)
             {
                 await _signalRService.DisconnectPeerAsync(connection);
             }
@@ -296,7 +292,7 @@ public partial class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 LogMessage($"复制ID失败: {ex.Message}");
-                MessageBox.Show($"复制ID失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Controls.CustomDialog.Show("错误", $"复制ID失败: {ex.Message}", false);
             }
         }
     }
@@ -314,7 +310,7 @@ public partial class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 LogMessage($"复制IP失败: {ex.Message}");
-                MessageBox.Show($"复制IP失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Controls.CustomDialog.Show("错误", $"复制IP失败: {ex.Message}", false);
             }
         }
     }

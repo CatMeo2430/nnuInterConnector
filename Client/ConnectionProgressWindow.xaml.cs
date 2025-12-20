@@ -45,25 +45,25 @@ public partial class ConnectionProgressWindow : Window
     {
         if (string.IsNullOrWhiteSpace(TargetIdTextBox.Text))
         {
-            MessageBox.Show("请输入对方ID", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "请输入对方ID", false);
             return;
         }
 
         if (!int.TryParse(TargetIdTextBox.Text, out _targetId))
         {
-            MessageBox.Show("ID必须是数字", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "ID必须是数字", false);
             return;
         }
 
         if (_targetId < 100000 || _targetId > 999999)
         {
-            MessageBox.Show("ID必须是6位数字（100000-999999）", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "ID必须是6位数字（100000-999999）", false);
             return;
         }
 
         if (_targetId.ToString() == _mainViewModel.MyId)
         {
-            MessageBox.Show("不能连接到自己", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
             return;
         }
 
