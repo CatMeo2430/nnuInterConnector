@@ -13,7 +13,7 @@ public class SignalRService
     private string _ipAddress = string.Empty;
     private System.Timers.Timer? _heartbeatTimer;
 
-    private const string ServerIpAddress = "10.20.214.145";
+    private const string ServerIpAddress = "120.55.67.157";
     private const int HttpPort = 8080;
     private const int WebSocketPort = 8081;
     

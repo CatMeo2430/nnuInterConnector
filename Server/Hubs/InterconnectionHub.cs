@@ -157,7 +157,8 @@ public class InterconnectionHub : Hub
 
         if (!_clients.TryGetValue(targetId, out var targetInfo))
         {
-            await Clients.Caller.SendAsync("ConnectionFailed", "目标客户端不存在或已离线");
+            _logger.LogInformation("Connection request failed: Target ID {TargetId} does not exist", targetId);
+            await Clients.Caller.SendAsync("ConnectionFailed", 1); // 1 = 目标ID不存在
             return;
         }
 

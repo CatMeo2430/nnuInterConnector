@@ -25,10 +25,76 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _logText = string.Empty;
 
-    [ObservableProperty]
-    private ConnectionInfo? _selectedConnection;
-
     public ObservableCollection<ConnectionInfo> Connections => _signalRService.Connections;
+
+    [RelayCommand]
+    private void CopyPeerId(object? parameter)
+    {
+        if (parameter is int peerId)
+        {
+            try
+            {
+                Clipboard.SetText(peerId.ToString());
+                LogMessage($"ID {peerId} 已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制ID失败: {ex.Message}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void CopyPeerIp(object? parameter)
+    {
+        if (parameter is string peerIp)
+        {
+            try
+            {
+                Clipboard.SetText(peerIp);
+                LogMessage($"IP {peerIp} 已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制IP失败: {ex.Message}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void CopyStatus(object? parameter)
+    {
+        if (parameter is string status)
+        {
+            try
+            {
+                Clipboard.SetText(status);
+                LogMessage($"状态 '{status}' 已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制状态失败: {ex.Message}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void CopyTime(object? parameter)
+    {
+        if (parameter is DateTime time)
+        {
+            try
+            {
+                var timeString = time.ToString("yyyy-MM-dd HH:mm:ss");
+                Clipboard.SetText(timeString);
+                LogMessage($"时间 {timeString} 已复制到剪贴板");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"复制时间失败: {ex.Message}");
+            }
+        }
+    }
 
     public MainViewModel()
     {
@@ -150,25 +216,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DisconnectSelected()
+    private async Task Disconnect(object? parameter)
     {
-        if (SelectedConnection == null)
+        if (parameter is ConnectionInfo connection)
         {
-            MessageBox.Show("请选择要断开的连接", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+            var result = MessageBox.Show(
+                $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。",
+                "确认断开",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            );
 
-        var result = MessageBox.Show(
-            $"确定要断开与 ID {SelectedConnection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。",
-            "确认断开",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question
-        );
-
-        if (result == MessageBoxResult.Yes)
-        {
-            await _signalRService.DisconnectPeerAsync(SelectedConnection);
-            SelectedConnection = null;
+            if (result == MessageBoxResult.Yes)
+            {
+                await _signalRService.DisconnectPeerAsync(connection);
+            }
         }
     }
 
