@@ -65,7 +65,7 @@ public partial class ConnectionProgressWindow : Window
 
         if (_targetId.ToString() == _mainViewModel.MyId)
         {
-            Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
+            Controls.CustomDialog.ShowModal("输入错误", "不能连接到自己", false);
             Close();
             return;
         }
@@ -167,6 +167,9 @@ public partial class ConnectionProgressWindow : Window
             1 => "目标ID不存在",
             2 => "目标不在线",
             3 => "连接超时",
+            4 => "重复请求",
+            5 => "已被永久拒绝",
+            6 => "冷却期中，请等待",
             _ => "未知错误"
         };
         
@@ -213,6 +216,12 @@ public partial class ConnectionProgressWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
+        // 如果正在连接，发送取消请求
+        if (_isConnecting && _targetId > 0)
+        {
+            _ = _signalRService.CancelConnectionAsync(_targetId);
+        }
+        
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;
@@ -221,6 +230,12 @@ public partial class ConnectionProgressWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        // 如果正在连接，发送取消请求
+        if (_isConnecting && _targetId > 0)
+        {
+            _ = _signalRService.CancelConnectionAsync(_targetId);
+        }
+        
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;

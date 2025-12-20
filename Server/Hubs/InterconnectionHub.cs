@@ -11,6 +11,7 @@ public class InterconnectionHub : Hub
     private static readonly ConcurrentDictionary<string, int> _uuidToId = new();
     private static readonly ConcurrentDictionary<int, HashSet<int>> _connections = new();
     private static readonly ConcurrentDictionary<(int requesterId, int targetId), CancellationTokenSource> _pendingRequests = new();
+    private static readonly ConcurrentDictionary<(int requesterId, int targetId), (int rejectCount, DateTime lastRejectTime)> _rejectHistory = new();
     private static readonly Random _random = new();
     private readonly ILogger<InterconnectionHub> _logger;
     private readonly IHubContext<InterconnectionHub> _hubContext;
@@ -163,19 +164,43 @@ public class InterconnectionHub : Hub
             return;
         }
 
-        // 检查是否有待处理的请求（防止重复请求）
-        var requestKey = (requesterId, targetId);
-        if (_pendingRequests.ContainsKey(requestKey))
+        // 检查请求者是否已有待处理的请求（无论目标是谁）
+        var hasPendingRequest = _pendingRequests.Keys.Any(k => k.requesterId == requesterId);
+        if (hasPendingRequest)
         {
-            _logger.LogInformation("Connection request rejected: Duplicate request from {RequesterId} to {TargetId}", requesterId, targetId);
+            _logger.LogInformation("Connection request rejected: Requester {RequesterId} already has a pending request", requesterId);
             await Clients.Caller.SendAsync("ConnectionFailed", 4); // 4 = 重复请求
             return;
+        }
+
+        // 检查冷却期和永久拒绝
+        var rejectKey = (requesterId, targetId);
+        if (_rejectHistory.TryGetValue(rejectKey, out var rejectInfo))
+        {
+            // 检查是否达到3次拒绝（永久拒绝）
+            if (rejectInfo.rejectCount >= 3)
+            {
+                _logger.LogInformation("Connection request permanently rejected: Requester {RequesterId} has been rejected 3 times by {TargetId}", requesterId, targetId);
+                await Clients.Caller.SendAsync("ConnectionFailed", 5); // 5 = 永久拒绝
+                return;
+            }
+            
+            // 检查冷却期（1分钟）
+            var timeSinceLastReject = DateTime.UtcNow - rejectInfo.lastRejectTime;
+            if (timeSinceLastReject < TimeSpan.FromMinutes(1))
+            {
+                var remainingSeconds = (int)(TimeSpan.FromMinutes(1) - timeSinceLastReject).TotalSeconds;
+                _logger.LogInformation("Connection request rejected: Requester {RequesterId} is in cooldown period for {TargetId}, remaining {RemainingSeconds}s", requesterId, targetId, remainingSeconds);
+                await Clients.Caller.SendAsync("ConnectionFailed", 6); // 6 = 冷却期中
+                return;
+            }
         }
 
         _logger.LogInformation("Connection request: {RequesterId} -> {TargetId}", requesterId, targetId);
         
         // 创建取消令牌源用于超时控制
         var cts = new CancellationTokenSource();
+        var requestKey = (requesterId, targetId);
         _pendingRequests.TryAdd(requestKey, cts);
         
         // 发送连接请求给目标
@@ -202,7 +227,7 @@ public class InterconnectionHub : Hub
             }
             catch (TaskCanceledException)
             {
-                // 请求被正常处理（接受或拒绝），取消定时器
+                // 请求被正常处理（接受、拒绝或取消），取消定时器
                 _logger.LogInformation("Connection request cancelled: {RequesterId} -> {TargetId}", requesterId, targetId);
             }
         });
@@ -258,7 +283,42 @@ public class InterconnectionHub : Hub
         }
 
         _logger.LogInformation("Connection rejected: {RequesterId} <- {RejecterId}", requesterId, rejecterId);
+        
+        // 更新拒绝历史记录（只有主动拒绝才计入）
+        var rejectKey = (requesterId, rejecterId);
+        _rejectHistory.AddOrUpdate(rejectKey,
+            (1, DateTime.UtcNow), // 第一次拒绝
+            (key, oldValue) => (oldValue.rejectCount + 1, DateTime.UtcNow) // 增加拒绝次数
+        );
+        
         await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionRejected", rejecterId);
+    }
+
+    public async Task CancelConnection(int targetId)
+    {
+        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
+        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
+            return;
+
+        if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
+            !_clients.TryGetValue(targetId, out var targetInfo))
+            return;
+
+        // 取消超时定时器
+        var requestKey = (requesterId, targetId);
+        if (_pendingRequests.TryRemove(requestKey, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        _logger.LogInformation("Connection cancelled: {RequesterId} -x-> {TargetId}", requesterId, targetId);
+        
+        // 通知被请求者请求被取消
+        await Clients.Client(targetInfo.ConnectionId).SendAsync("ConnectionCancelled", requesterId);
+        
+        // 通知请求者请求已取消
+        await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionCancelled", targetId);
     }
 
     public async Task DisconnectPeer(int peerId)

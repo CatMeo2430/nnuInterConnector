@@ -13,11 +13,10 @@
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/Services/SignalRService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Services/SignalRService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nnuInterConnector.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/nnuInterConnector.sln.DotSettings.user" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +81,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "CodeInspectionSettingsId",
+    "settings.editor.selected.configurable": "terminal",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -154,7 +153,7 @@
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
       <workItem from="1766149096587" duration="37327000" />
-      <workItem from="1766234514868" duration="10713000" />
+      <workItem from="1766234514868" duration="13167000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -340,7 +339,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766242256292</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Dev 0.1.5.0 - 1&#10;新增安全机制">
+      <option name="closed" value="true" />
+      <created>1766245606450</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1766245606450</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -384,7 +391,8 @@
     <MESSAGE value="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全" />
     <MESSAGE value="Dev 0.1.4.0 - 4&#10;修复&quot;互联请求被拒绝&quot;的弹窗异常" />
     <MESSAGE value="Alpha 0.1.4.0&#10;完成弹窗GUI" />
-    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.1.4.0&#10;完成弹窗GUI" />
+    <MESSAGE value="Dev 0.1.5.0 - 1&#10;新增安全机制" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.5.0 - 1&#10;新增安全机制" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -403,5 +411,9 @@
         </breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

@@ -121,6 +121,7 @@ public partial class MainViewModel : ObservableObject
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         _signalRService.ConnectionRejected += OnConnectionRejected;
         _signalRService.ConnectionTimeout += OnConnectionTimeout;
+        _signalRService.ConnectionCancelled += OnConnectionCancelled;
 
         // 初始化日志文件
         var logsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
@@ -220,6 +221,21 @@ public partial class MainViewModel : ObservableObject
         LogMessage($"ID {requesterId} 的连接请求超时");
         
         // 关闭超时对应的确认对话框
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (_pendingDialogs.TryRemove(requesterId, out var dialog))
+            {
+                dialog.Close();
+                LogMessage($"已关闭 ID {requesterId} 的确认对话框");
+            }
+        });
+    }
+
+    private void OnConnectionCancelled(object? sender, int requesterId)
+    {
+        LogMessage($"ID {requesterId} 取消了连接请求");
+        
+        // 关闭取消对应的确认对话框
         Application.Current.Dispatcher.Invoke(() =>
         {
             if (_pendingDialogs.TryRemove(requesterId, out var dialog))

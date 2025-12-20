@@ -30,6 +30,7 @@ public class SignalRService
     public event EventHandler<int>? ConnectionRejected;
     public event EventHandler<int>? ConnectionFailed;
     public event EventHandler<int>? ConnectionTimeout;
+    public event EventHandler<int>? ConnectionCancelled;
 
     public int? ClientId { get; private set; }
     public string IpAddress => _ipAddress;
@@ -165,10 +166,20 @@ public class SignalRService
             });
         });
 
-        _connection.On<int>("ConnectionFailed", message =>
+        _connection.On<int>("ConnectionFailed", errorCode =>
         {
-            OnLogMessage($"连接失败: {message}");
-            ConnectionFailed?.Invoke(this, message);
+            string errorMessage = errorCode switch
+            {
+                1 => "目标ID不存在",
+                2 => "目标不在线",
+                3 => "连接超时",
+                4 => "重复请求",
+                5 => "已被永久拒绝",
+                6 => "冷却期中，请等待",
+                _ => "未知错误"
+            };
+            OnLogMessage($"连接失败: {errorMessage}");
+            ConnectionFailed?.Invoke(this, errorCode);
         });
 
         _connection.On<int>("ConnectionRejected", rejecterId =>
@@ -181,6 +192,12 @@ public class SignalRService
         {
             OnLogMessage($"ID {requesterId} 的连接请求超时");
             ConnectionTimeout?.Invoke(this, requesterId);
+        });
+
+        _connection.On<int>("ConnectionCancelled", requesterId =>
+        {
+            OnLogMessage($"ID {requesterId} 取消了连接请求");
+            ConnectionCancelled?.Invoke(this, requesterId);
         });
 
         _connection.On<int, string>("PeerDisconnected", async (peerId, peerIp) =>
@@ -346,6 +363,15 @@ public class SignalRService
         {
             await _connection.InvokeAsync("RejectConnection", requesterId);
             OnLogMessage($"已拒绝ID {requesterId} 的连接请求");
+        }
+    }
+
+    public async Task CancelConnectionAsync(int targetId)
+    {
+        if (_connection?.State == HubConnectionState.Connected)
+        {
+            await _connection.InvokeAsync("CancelConnection", targetId);
+            OnLogMessage($"已取消向ID {targetId} 的连接请求");
         }
     }
 
