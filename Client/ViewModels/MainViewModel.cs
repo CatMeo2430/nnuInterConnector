@@ -82,12 +82,12 @@ public partial class MainViewModel : ObservableObject
             if (result == MessageBoxResult.Yes)
             {
                 await _signalRService.AcceptConnectionAsync(requesterId);
-                LogMessage($"已接受 ID {requesterId} 的连接请求");
+                LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
             }
             else
             {
                 await _signalRService.RejectConnectionAsync(requesterId);
-                LogMessage($"已拒绝 ID {requesterId} 的连接请求");
+                LogMessage($"❌ 已拒绝 ID {requesterId} 的连接请求");
             }
         });
     }
