@@ -1,0 +1,63 @@
+<UserControl x:Class="Client.Controls.ThreeStateToggle"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="44" d:DesignWidth="360">
+    <Grid>
+        <Border x:Name="ToggleBackground" 
+                Height="44"
+                Background="White"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1"
+                CornerRadius="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Border x:Name="SelectionIndicator" 
+                        Grid.Column="0"
+                        Background="#FFC107"
+                        Margin="0"
+                        CornerRadius="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="IndicatorTransform"/>
+                    </Border.RenderTransform>
+                </Border>
+                
+                <TextBlock Grid.Column="0" 
+                           x:Name="ManualText"
+                           Text="手动控制" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                
+                <TextBlock Grid.Column="1" 
+                           x:Name="AutoRejectText"
+                           Text="自动拒绝" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                
+                <TextBlock Grid.Column="2" 
+                           x:Name="AutoAcceptText"
+                           Text="自动同意" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

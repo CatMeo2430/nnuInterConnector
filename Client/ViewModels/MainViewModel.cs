@@ -1,3 +1,4 @@
+using Client.Controls;
 using Client.Models;
 using Client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,6 +25,21 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _logText = string.Empty;
+    
+    [ObservableProperty]
+    private ConnectionMode _connectionMode = ConnectionMode.Manual;
+
+    partial void OnConnectionModeChanged(ConnectionMode value)
+    {
+        var modeText = value switch
+        {
+            ConnectionMode.Manual => "手动控制",
+            ConnectionMode.AutoAccept => "自动同意",
+            ConnectionMode.AutoReject => "自动拒绝",
+            _ => "未知"
+        };
+        LogMessage($"连接模式切换为：{modeText}");
+    }
 
     public ObservableCollection<ConnectionInfo> Connections => _signalRService.Connections;
 
@@ -138,22 +154,37 @@ public partial class MainViewModel : ObservableObject
         
         Application.Current.Dispatcher.Invoke(async () =>
         {
-            var result = MessageBox.Show(
-                $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？",
-                "连接请求",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question
-            );
+            switch (ConnectionMode)
+            {
+                case ConnectionMode.Manual:
+                    var result = MessageBox.Show(
+                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？",
+                        "连接请求",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question
+                    );
 
-            if (result == MessageBoxResult.Yes)
-            {
-                await _signalRService.AcceptConnectionAsync(requesterId);
-                LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
-            }
-            else
-            {
-                await _signalRService.RejectConnectionAsync(requesterId);
-                LogMessage($"❌ 已拒绝 ID {requesterId} 的连接请求");
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        await _signalRService.AcceptConnectionAsync(requesterId);
+                        LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
+                    }
+                    else
+                    {
+                        await _signalRService.RejectConnectionAsync(requesterId);
+                        LogMessage($"❌ 已拒绝 ID {requesterId} 的连接请求");
+                    }
+                    break;
+                    
+                case ConnectionMode.AutoAccept:
+                    await _signalRService.AcceptConnectionAsync(requesterId);
+                    LogMessage($"✅ 自动接受 ID {requesterId} 的连接请求");
+                    break;
+                    
+                case ConnectionMode.AutoReject:
+                    await _signalRService.RejectConnectionAsync(requesterId);
+                    LogMessage($"❌ 自动拒绝 ID {requesterId} 的连接请求");
+                    break;
             }
         });
     }
@@ -276,6 +307,27 @@ public partial class MainViewModel : ObservableObject
                 MessageBox.Show($"复制IP失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    }
+
+    [RelayCommand]
+    private void SetManualMode()
+    {
+        ConnectionMode = ConnectionMode.Manual;
+        LogMessage("连接模式切换为：手动控制");
+    }
+
+    [RelayCommand]
+    private void SetAutoAcceptMode()
+    {
+        ConnectionMode = ConnectionMode.AutoAccept;
+        LogMessage("连接模式切换为：自动接受");
+    }
+
+    [RelayCommand]
+    private void SetAutoRejectMode()
+    {
+        ConnectionMode = ConnectionMode.AutoReject;
+        LogMessage("连接模式切换为：自动拒绝");
     }
 
     public async Task CleanupAsync()

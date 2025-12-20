@@ -4,12 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
+        xmlns:controls="clr-namespace:Client.Controls"
         mc:Ignorable="d"
         Title="NNU InterConnector" Height="650" Width="900"
         Background="#F5F5F5"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
+        
         <Style TargetType="Button">
             <Setter Property="Background" Value="#0078D4"/>
             <Setter Property="Foreground" Value="White"/>
@@ -151,12 +153,18 @@
                     <Button Command="{Binding InitiateConnectionCommand}" 
                             Style="{StaticResource ModernButtonStyle}"
                             Height="40" 
-                            Padding="20,0"
+                            Padding="40,0"
                             ToolTip="发起新的互联请求">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="发起互联" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
+                    
+                    <controls:ThreeStateToggle x:Name="ConnectionModeToggle"
+                                               Width="360" 
+                                               Height="44"
+                                               Margin="20,0,0,0"
+                                               CurrentState="{Binding ConnectionMode, Mode=TwoWay}"/>
                 </StackPanel>
             </Grid>
         </Border>

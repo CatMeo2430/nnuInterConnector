@@ -13,6 +13,7 @@
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -142,7 +143,7 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="27567000" />
+      <workItem from="1766149096587" duration="31050000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -248,7 +249,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766221297806</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Dev 0.1.1.1-2_6&#10;美化已建立连接的样式">
+      <option name="closed" value="true" />
+      <created>1766224519848</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1766224519848</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -282,7 +291,8 @@
     <MESSAGE value="Dev 0.1.1.1-2_3&#10;美化互联协商界面" />
     <MESSAGE value="Dev 0.1.1.1-2_4&#10;修复互联协商进度条问题" />
     <MESSAGE value="Dev 0.1.1.1-2_5&#10;重写已建立连接的样式" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.1.1-2_5&#10;重写已建立连接的样式" />
+    <MESSAGE value="Dev 0.1.1.1-2_6&#10;美化已建立连接的样式" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.1.1-2_6&#10;美化已建立连接的样式" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
