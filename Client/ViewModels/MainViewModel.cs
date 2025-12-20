@@ -4,6 +4,7 @@ using Client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -17,6 +18,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SignalRService _signalRService;
     private readonly string _logFilePath;
     private ConnectionProgressWindow? _currentProgressWindow;
+    private readonly ConcurrentDictionary<int, Controls.CustomDialog> _pendingDialogs = new();
 
     [ObservableProperty]
     private string _myId = "未连接";
@@ -118,6 +120,7 @@ public partial class MainViewModel : ObservableObject
         _signalRService.ConnectionRequestReceived += OnConnectionRequestReceived;
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         _signalRService.ConnectionRejected += OnConnectionRejected;
+        _signalRService.ConnectionTimeout += OnConnectionTimeout;
 
         // 初始化日志文件
         var logsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
@@ -152,15 +155,27 @@ public partial class MainViewModel : ObservableObject
     {
         var (requesterId, requesterIp) = e;
         
-        Application.Current.Dispatcher.Invoke(async () =>
+        _ = Task.Run(async () =>
         {
             switch (ConnectionMode)
             {
                 case ConnectionMode.Manual:
-                    var result = Controls.CustomDialog.ShowModal(
-                        "连接请求",
-                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n是否接受？"
-                    );
+                    // 创建非模态对话框
+                    var dialog = await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        var dlg = Controls.CustomDialog.Show(
+                            "连接请求",
+                            $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n是否接受？"
+                        );
+                        _pendingDialogs.TryAdd(requesterId, dlg);
+                        return dlg;
+                    });
+
+                    // 等待结果
+                    var result = await dialog.ResultTask;
+
+                    // 从字典中移除
+                    _pendingDialogs.TryRemove(requesterId, out _);
 
                     if (result == true)
                     {
@@ -197,6 +212,21 @@ public partial class MainViewModel : ObservableObject
         {
             _currentProgressWindow?.Close();
             _currentProgressWindow = null;
+        });
+    }
+
+    private void OnConnectionTimeout(object? sender, int requesterId)
+    {
+        LogMessage($"ID {requesterId} 的连接请求超时");
+        
+        // 关闭超时对应的确认对话框
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (_pendingDialogs.TryRemove(requesterId, out var dialog))
+            {
+                dialog.Close();
+                LogMessage($"已关闭 ID {requesterId} 的确认对话框");
+            }
         });
     }
 

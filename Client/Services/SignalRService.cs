@@ -29,6 +29,7 @@ public class SignalRService
     public event EventHandler<(int, string)>? ConnectionEstablished;
     public event EventHandler<int>? ConnectionRejected;
     public event EventHandler<int>? ConnectionFailed;
+    public event EventHandler<int>? ConnectionTimeout;
 
     public int? ClientId { get; private set; }
     public string IpAddress => _ipAddress;
@@ -174,6 +175,12 @@ public class SignalRService
         {
             OnLogMessage($"ID {rejecterId} 拒绝了您的连接请求");
             ConnectionRejected?.Invoke(this, rejecterId);
+        });
+
+        _connection.On<int>("ConnectionTimeout", requesterId =>
+        {
+            OnLogMessage($"ID {requesterId} 的连接请求超时");
+            ConnectionTimeout?.Invoke(this, requesterId);
         });
 
         _connection.On<int, string>("PeerDisconnected", async (peerId, peerIp) =>

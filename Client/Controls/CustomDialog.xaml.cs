@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -5,8 +7,8 @@ namespace Client.Controls;
 
 public partial class CustomDialog : Window
 {
+    private TaskCompletionSource<bool?>? _resultTaskSource;
     private bool? _dialogResult;
-    private bool _isModal = false;
     
     public new bool? DialogResult 
     { 
@@ -14,12 +16,14 @@ public partial class CustomDialog : Window
         private set => _dialogResult = value; 
     }
 
-    public CustomDialog(string title, string message, bool showCancelButton = true, bool isModal = false)
+    public Task<bool?> ResultTask => _resultTaskSource?.Task ?? Task.FromResult<bool?>(null);
+
+    public CustomDialog(string title, string message, bool showCancelButton = true)
     {
         InitializeComponent();
         Title = title;
         MessageText.Text = message;
-        _isModal = isModal;
+        _resultTaskSource = new TaskCompletionSource<bool?>();
         
         if (!showCancelButton)
         {
@@ -31,42 +35,37 @@ public partial class CustomDialog : Window
 
     private void ConfirmButton_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
-        base.DialogResult = true;
+        _dialogResult = true;
+        _resultTaskSource?.TrySetResult(true);
         Close();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = false;
-        base.DialogResult = false;
+        _dialogResult = false;
+        _resultTaskSource?.TrySetResult(false);
         Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        _resultTaskSource?.TrySetResult(_dialogResult);
     }
 
     // 模态对话框（阻塞式，需要返回值）
     public static bool? ShowModal(string title, string message, bool showCancelButton = true)
     {
-        try
-        {
-            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Creating modal dialog: title={title}, message={message}");
-            var dialog = new CustomDialog(title, message, showCancelButton, true);
-            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Dialog created, calling ShowDialog...");
-            dialog.ShowDialog();
-            System.Diagnostics.Debug.WriteLine($"[CustomDialog] ShowDialog returned, result={dialog.DialogResult}");
-            return dialog.DialogResult;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Error in ShowModal: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Stack trace: {ex.StackTrace}");
-            throw;
-        }
+        var dialog = new CustomDialog(title, message, showCancelButton);
+        dialog.ShowDialog();
+        return dialog.DialogResult;
     }
     
-    // 非模态对话框（非阻塞式，不返回值）
-    public static void Show(string title, string message, bool showCancelButton = true)
+    // 非模态对话框（非阻塞式，返回Task等待结果）
+    public static CustomDialog Show(string title, string message, bool showCancelButton = true)
     {
-        var dialog = new CustomDialog(title, message, showCancelButton, false);
+        var dialog = new CustomDialog(title, message, showCancelButton);
         dialog.Show();
+        return dialog;
     }
 }

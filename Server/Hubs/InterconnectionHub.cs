@@ -10,6 +10,7 @@ public class InterconnectionHub : Hub
     private static readonly ConcurrentDictionary<int, ClientInfo> _clients = new();
     private static readonly ConcurrentDictionary<string, int> _uuidToId = new();
     private static readonly ConcurrentDictionary<int, HashSet<int>> _connections = new();
+    private static readonly ConcurrentDictionary<(int requesterId, int targetId), CancellationTokenSource> _pendingRequests = new();
     private static readonly Random _random = new();
     private readonly ILogger<InterconnectionHub> _logger;
     private readonly IHubContext<InterconnectionHub> _hubContext;
@@ -162,8 +163,49 @@ public class InterconnectionHub : Hub
             return;
         }
 
+        // 检查是否有待处理的请求（防止重复请求）
+        var requestKey = (requesterId, targetId);
+        if (_pendingRequests.ContainsKey(requestKey))
+        {
+            _logger.LogInformation("Connection request rejected: Duplicate request from {RequesterId} to {TargetId}", requesterId, targetId);
+            await Clients.Caller.SendAsync("ConnectionFailed", 4); // 4 = 重复请求
+            return;
+        }
+
         _logger.LogInformation("Connection request: {RequesterId} -> {TargetId}", requesterId, targetId);
+        
+        // 创建取消令牌源用于超时控制
+        var cts = new CancellationTokenSource();
+        _pendingRequests.TryAdd(requestKey, cts);
+        
+        // 发送连接请求给目标
         await Clients.Client(targetInfo.ConnectionId).SendAsync("ConnectionRequest", requesterId, requesterInfo.IpAddress);
+        
+        // 启动30秒超时定时器
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(30000, cts.Token); // 30秒超时
+                
+                // 超时处理
+                if (_pendingRequests.TryRemove(requestKey, out _))
+                {
+                    _logger.LogInformation("Connection request timeout: {RequesterId} -> {TargetId}", requesterId, targetId);
+                    
+                    // 向请求方发送被拒绝消息
+                    await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionRejected", targetId);
+                    
+                    // 向被请求方发送超时消息
+                    await Clients.Client(targetInfo.ConnectionId).SendAsync("ConnectionTimeout", requesterId);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // 请求被正常处理（接受或拒绝），取消定时器
+                _logger.LogInformation("Connection request cancelled: {RequesterId} -> {TargetId}", requesterId, targetId);
+            }
+        });
     }
 
     public async Task AcceptConnection(int requesterId)
@@ -175,6 +217,14 @@ public class InterconnectionHub : Hub
         if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
             !_clients.TryGetValue(accepterId, out var accepterInfo))
             return;
+
+        // 取消超时定时器
+        var requestKey = (requesterId, accepterId);
+        if (_pendingRequests.TryRemove(requestKey, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
 
         _logger.LogInformation("Connection accepted: {RequesterId} <-> {AccepterId}", requesterId, accepterId);
 
@@ -198,6 +248,14 @@ public class InterconnectionHub : Hub
 
         if (!_clients.TryGetValue(requesterId, out var requesterInfo))
             return;
+
+        // 取消超时定时器
+        var requestKey = (requesterId, rejecterId);
+        if (_pendingRequests.TryRemove(requestKey, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
 
         _logger.LogInformation("Connection rejected: {RequesterId} <- {RejecterId}", requesterId, rejecterId);
         await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionRejected", rejecterId);

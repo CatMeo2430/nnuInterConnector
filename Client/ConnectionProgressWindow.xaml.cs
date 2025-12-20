@@ -70,6 +70,15 @@ public partial class ConnectionProgressWindow : Window
             return;
         }
 
+        // 检查是否已连接
+        var existingConnection = _signalRService.Connections.FirstOrDefault(c => c.PeerId == _targetId);
+        if (existingConnection != null)
+        {
+            Controls.CustomDialog.ShowModal("已建立互联", $"与 ID {_targetId} 的互联已建立", false);
+            Close();
+            return;
+        }
+
         StartConnection();
     }
 
