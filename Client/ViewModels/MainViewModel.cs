@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -13,6 +15,7 @@ namespace Client.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly SignalRService _signalRService;
+    private readonly string _logFilePath;
 
     [ObservableProperty]
     private string _myId = "未连接";
@@ -22,9 +25,6 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _targetId = string.Empty;
-
-    [ObservableProperty]
-    private string _logText = string.Empty;
     
     [ObservableProperty]
     private ConnectionMode _connectionMode = ConnectionMode.Manual;
@@ -121,6 +121,11 @@ public partial class MainViewModel : ObservableObject
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         _signalRService.ConnectionRejected += OnConnectionRejected;
 
+        // 初始化日志文件
+        var logsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+        Directory.CreateDirectory(logsDirectory);
+        _logFilePath = Path.Combine(logsDirectory, $"{DateTime.Now:yyyy-MM-dd}.log");
+
         LogMessage("NNU InterConnector 客户端启动");
         
         _ = InitializeAsync();
@@ -134,10 +139,7 @@ public partial class MainViewModel : ObservableObject
 
     private void OnLogMessage(object? sender, string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            LogText += message + "\n";
-        }, System.Windows.Threading.DispatcherPriority.Normal);
+        LogMessage(message);
     }
 
     private void OnRegistrationSuccess(object? sender, int id)
@@ -267,10 +269,18 @@ public partial class MainViewModel : ObservableObject
 
     private void LogMessage(string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        var logEntry = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        
+        // 写入日志文件
+        try
         {
-            LogText += $"[{DateTime.Now:HH:mm:ss}] {message}\n";
-        });
+            File.AppendAllText(_logFilePath, logEntry + Environment.NewLine);
+        }
+        catch (Exception ex)
+        {
+            // 如果写入文件失败，静默处理（避免无限递归）
+            Debug.WriteLine($"日志写入失败: {ex.Message}");
+        }
     }
 
     [RelayCommand]

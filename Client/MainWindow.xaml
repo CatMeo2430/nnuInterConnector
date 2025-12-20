@@ -17,7 +17,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,10" BorderBrush="#E0E0E0" BorderThickness="1">
@@ -119,7 +118,7 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,10" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Border Grid.Row="1" Background="White" CornerRadius="8,8,0,0" Padding="20,20,20,0" Margin="0,0,0,0" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0" VerticalAlignment="Stretch">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -264,25 +263,6 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </ScrollViewer>
-            </Grid>
-        </Border>
-
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Text="运行日志" FontSize="14" FontWeight="Bold" Foreground="#333333" Margin="0,0,0,10"/>
-                
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <TextBlock Text="{Binding LogText}" 
-                               FontFamily="Consolas" 
-                               FontSize="12" 
-                               Foreground="#666666" 
-                               TextWrapping="Wrap"/>
                 </ScrollViewer>
             </Grid>
         </Border>
