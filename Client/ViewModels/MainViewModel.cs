@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -13,18 +15,14 @@ namespace Client.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly SignalRService _signalRService;
+    private readonly string _logFilePath;
+    private ConnectionProgressWindow? _currentProgressWindow;
 
     [ObservableProperty]
     private string _myId = "未连接";
 
     [ObservableProperty]
     private string _myIp = "检测中...";
-
-    [ObservableProperty]
-    private string _targetId = string.Empty;
-
-    [ObservableProperty]
-    private string _logText = string.Empty;
     
     [ObservableProperty]
     private ConnectionMode _connectionMode = ConnectionMode.Manual;
@@ -121,6 +119,11 @@ public partial class MainViewModel : ObservableObject
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         _signalRService.ConnectionRejected += OnConnectionRejected;
 
+        // 初始化日志文件
+        var logsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+        Directory.CreateDirectory(logsDirectory);
+        _logFilePath = Path.Combine(logsDirectory, $"{DateTime.Now:yyyy-MM-dd}.log");
+
         LogMessage("NNU InterConnector 客户端启动");
         
         _ = InitializeAsync();
@@ -134,10 +137,7 @@ public partial class MainViewModel : ObservableObject
 
     private void OnLogMessage(object? sender, string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            LogText += message + "\n";
-        }, System.Windows.Threading.DispatcherPriority.Normal);
+        LogMessage(message);
     }
 
     private void OnRegistrationSuccess(object? sender, int id)
@@ -157,14 +157,12 @@ public partial class MainViewModel : ObservableObject
             switch (ConnectionMode)
             {
                 case ConnectionMode.Manual:
-                    var result = MessageBox.Show(
-                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n\n是否接受？",
+                    var result = Controls.CustomDialog.ShowModal(
                         "连接请求",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question
+                        $"收到来自 ID {requesterId} (IP: {requesterIp}) 的连接请求\n是否接受？"
                     );
 
-                    if (result == MessageBoxResult.Yes)
+                    if (result == true)
                     {
                         await _signalRService.AcceptConnectionAsync(requesterId);
                         LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
@@ -193,57 +191,37 @@ public partial class MainViewModel : ObservableObject
     {
         var (peerId, peerIp) = e;
         LogMessage($"与 ID {peerId} 的连接已建立");
+        
+        // 关闭当前的连接进度窗口
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            _currentProgressWindow?.Close();
+            _currentProgressWindow = null;
+        });
     }
 
     private void OnConnectionRejected(object? sender, int e)
     {
         LogMessage($"ID {e} 拒绝了您的连接请求");
-        MessageBox.Show($"ID {e} 拒绝了您的连接请求", "连接失败", MessageBoxButton.OK, MessageBoxImage.Information);
+        
+        // 保存当前窗口引用
+        var progressWindow = _currentProgressWindow;
+        _currentProgressWindow = null;
+        
+        // 确保在UI线程上显示对话框并关闭窗口
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            Controls.CustomDialog.ShowModal("请求被拒绝", $"ID {e} 拒绝了您的连接请求", false);
+            progressWindow?.Close();
+        });
     }
 
     [RelayCommand]
     private void InitiateConnection()
     {
-        var progressWindow = new ConnectionProgressWindow(_signalRService, this);
-        progressWindow.Show();
-    }
-
-    [RelayCommand]
-    private async Task ConnectToPeer()
-    {
-        if (string.IsNullOrWhiteSpace(TargetId))
-        {
-            MessageBox.Show("请输入目标ID", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (!int.TryParse(TargetId, out var targetId))
-        {
-            MessageBox.Show("ID必须是6位数字", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (targetId < 100000 || targetId > 999999)
-        {
-            MessageBox.Show("ID必须是6位数字（100000-999999）", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (MyId == "未连接")
-        {
-            MessageBox.Show("您尚未连接到服务器，请等待初始化完成", "连接错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (targetId.ToString() == MyId)
-        {
-            MessageBox.Show("不能连接到自己", "输入错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        LogMessage($"正在请求连接ID {targetId}...");
-        await _signalRService.RequestConnectionAsync(targetId);
-        TargetId = string.Empty;
+        _currentProgressWindow = new ConnectionProgressWindow(_signalRService, this);
+        _currentProgressWindow.Closed += (s, e) => _currentProgressWindow = null;
+        _currentProgressWindow.Show();
     }
 
     [RelayCommand]
@@ -251,14 +229,12 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is ConnectionInfo connection)
         {
-            var result = MessageBox.Show(
-                $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。",
+            var result = Controls.CustomDialog.ShowModal(
                 "确认断开",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question
+                $"确定要断开与 ID {connection.PeerId} 的连接吗？\n这将删除防火墙规则和路由配置。"
             );
 
-            if (result == MessageBoxResult.Yes)
+            if (result == true)
             {
                 await _signalRService.DisconnectPeerAsync(connection);
             }
@@ -267,10 +243,18 @@ public partial class MainViewModel : ObservableObject
 
     private void LogMessage(string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        var logEntry = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        
+        // 写入日志文件
+        try
         {
-            LogText += $"[{DateTime.Now:HH:mm:ss}] {message}\n";
-        });
+            File.AppendAllText(_logFilePath, logEntry + Environment.NewLine);
+        }
+        catch (Exception ex)
+        {
+            // 如果写入文件失败，静默处理（避免无限递归）
+            Debug.WriteLine($"日志写入失败: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -286,7 +270,7 @@ public partial class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 LogMessage($"复制ID失败: {ex.Message}");
-                MessageBox.Show($"复制ID失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Controls.CustomDialog.Show("错误", $"复制ID失败: {ex.Message}", false);
             }
         }
     }
@@ -304,7 +288,7 @@ public partial class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 LogMessage($"复制IP失败: {ex.Message}");
-                MessageBox.Show($"复制IP失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Controls.CustomDialog.Show("错误", $"复制IP失败: {ex.Message}", false);
             }
         }
     }

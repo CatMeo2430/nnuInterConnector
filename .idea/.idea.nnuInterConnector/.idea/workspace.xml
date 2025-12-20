@@ -12,9 +12,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/App.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/App.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,8 +39,7 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/App.xaml" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/ViewModels/MainViewModel.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/ConnectionProgressWindow.xaml.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -146,7 +142,8 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="34822000" />
+      <workItem from="1766149096587" duration="37327000" />
+      <workItem from="1766234514868" duration="7396000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -276,7 +273,55 @@
       <option name="project" value="LOCAL" />
       <updated>1766228573633</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Alpha 0.1.2.1&#10;美化GUI，调整元素大小">
+      <option name="closed" value="true" />
+      <created>1766231921249</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1766231921249</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Dev 0.1.3.0 - 1&#10;删除日志区域">
+      <option name="closed" value="true" />
+      <created>1766233555460</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1766233555460</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Dev 0.1.4.0 - 1&#10;重写弹窗">
+      <option name="closed" value="true" />
+      <created>1766235262139</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1766235262139</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Dev 0.1.4.0 - 2&#10;修复弹窗不显示内容">
+      <option name="closed" value="true" />
+      <created>1766236005373</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1766236005373</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全">
+      <option name="closed" value="true" />
+      <created>1766239045300</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1766239045300</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Dev 0.1.4.0 - 4&#10;修复&quot;互联请求被拒绝&quot;的弹窗异常">
+      <option name="closed" value="true" />
+      <created>1766241064493</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1766241064493</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -313,7 +358,13 @@
     <MESSAGE value="Dev 0.1.1.1-2_6&#10;美化已建立连接的样式" />
     <MESSAGE value="Dev 0.1.2.1&#10;增加互联请求接受模式" />
     <MESSAGE value="Dev 0.1.2.1-1&#10;修正互联请求接受模式" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.2.1-1&#10;修正互联请求接受模式" />
+    <MESSAGE value="Alpha 0.1.2.1&#10;美化GUI，调整元素大小" />
+    <MESSAGE value="Dev 0.1.3.0 - 1&#10;删除日志区域" />
+    <MESSAGE value="Dev 0.1.4.0 - 1&#10;重写弹窗" />
+    <MESSAGE value="Dev 0.1.4.0 - 2&#10;修复弹窗不显示内容" />
+    <MESSAGE value="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全" />
+    <MESSAGE value="Dev 0.1.4.0 - 4&#10;修复&quot;互联请求被拒绝&quot;的弹窗异常" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.4.0 - 4&#10;修复&quot;互联请求被拒绝&quot;的弹窗异常" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
