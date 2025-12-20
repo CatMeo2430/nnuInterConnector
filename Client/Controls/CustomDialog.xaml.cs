@@ -46,9 +46,21 @@ public partial class CustomDialog : Window
     // 模态对话框（阻塞式，需要返回值）
     public static bool? ShowModal(string title, string message, bool showCancelButton = true)
     {
-        var dialog = new CustomDialog(title, message, showCancelButton, true);
-        dialog.ShowDialog();
-        return dialog.DialogResult;
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Creating modal dialog: title={title}, message={message}");
+            var dialog = new CustomDialog(title, message, showCancelButton, true);
+            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Dialog created, calling ShowDialog...");
+            dialog.ShowDialog();
+            System.Diagnostics.Debug.WriteLine($"[CustomDialog] ShowDialog returned, result={dialog.DialogResult}");
+            return dialog.DialogResult;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Error in ShowModal: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[CustomDialog] Stack trace: {ex.StackTrace}");
+            throw;
+        }
     }
     
     // 非模态对话框（非阻塞式，不返回值）

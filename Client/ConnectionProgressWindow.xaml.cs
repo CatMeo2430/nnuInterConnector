@@ -23,9 +23,8 @@ public partial class ConnectionProgressWindow : Window
         _signalRService = signalRService;
         _mainViewModel = mainViewModel;
         
-        // 订阅连接失败事件
+        // 订阅连接事件（拒绝连接在MainViewModel中统一处理）
         _signalRService.ConnectionFailed += OnConnectionFailed;
-        _signalRService.ConnectionRejected += OnConnectionRejected;
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         
         ResetProgress();
@@ -173,21 +172,6 @@ public partial class ConnectionProgressWindow : Window
         _connectionResult.TrySetResult(false);
     }
 
-    private void OnConnectionRejected(object? sender, int rejecterId)
-    {
-        if (!_isConnecting) return;
-        
-        Dispatcher.BeginInvoke(() =>
-        {
-            StatusText.Text = $"ID {rejecterId} 拒绝了您的连接请求";
-            UpdateProgress(0, "连接被拒绝");
-            // 延迟关闭窗口，让用户看到错误信息
-            Task.Delay(2000).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
-        });
-        
-        _connectionResult.TrySetResult(false);
-    }
-
     private void OnConnectionEstablished(object? sender, (int, string) e)
     {
         if (!_isConnecting) return;
@@ -222,7 +206,6 @@ public partial class ConnectionProgressWindow : Window
     {
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
-        _signalRService.ConnectionRejected -= OnConnectionRejected;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;
         Close();
     }
@@ -231,7 +214,6 @@ public partial class ConnectionProgressWindow : Window
     {
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
-        _signalRService.ConnectionRejected -= OnConnectionRejected;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;
         base.OnClosing(e);
     }

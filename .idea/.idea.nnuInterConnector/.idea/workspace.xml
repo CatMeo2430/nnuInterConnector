@@ -13,7 +13,6 @@
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Controls/CustomDialog.xaml.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
     </list>
@@ -146,7 +145,7 @@
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
       <workItem from="1766149096587" duration="37327000" />
-      <workItem from="1766234514868" duration="4246000" />
+      <workItem from="1766234514868" duration="6437000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -308,7 +307,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766236005373</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全">
+      <option name="closed" value="true" />
+      <created>1766239045300</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1766239045300</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -349,7 +356,8 @@
     <MESSAGE value="Dev 0.1.3.0 - 1&#10;删除日志区域" />
     <MESSAGE value="Dev 0.1.4.0 - 1&#10;重写弹窗" />
     <MESSAGE value="Dev 0.1.4.0 - 2&#10;修复弹窗不显示内容" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.4.0 - 2&#10;修复弹窗不显示内容" />
+    <MESSAGE value="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.4.0 - 3&#10;修复弹窗内容显示不全" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

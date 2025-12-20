@@ -206,15 +206,30 @@ public partial class MainViewModel : ObservableObject
     private void OnConnectionRejected(object? sender, int e)
     {
         LogMessage($"ID {e} 拒绝了您的连接请求");
-        // 显示非模态对话框
-        Controls.CustomDialog.Show("连接失败", $"ID {e} 拒绝了您的连接请求", false);
+        LogMessage($"准备显示拒绝对话框...");
         
-        // 关闭当前的连接进度窗口
-        Application.Current.Dispatcher.Invoke(() =>
+        try
         {
-            _currentProgressWindow?.Close();
+            // 保存当前窗口引用
+            var progressWindow = _currentProgressWindow;
             _currentProgressWindow = null;
-        });
+            
+            // 确保在UI线程上显示对话框
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                LogMessage($"在UI线程上调用CustomDialog.ShowModal...");
+                var result = Controls.CustomDialog.ShowModal("请求被拒绝", $"ID {e} 拒绝了您的连接请求", false);
+                LogMessage($"对话框返回结果: {result}");
+                
+                // 然后关闭连接进度窗口
+                progressWindow?.Close();
+            });
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"显示拒绝对话框时发生错误: {ex.Message}");
+            LogMessage($"错误详情: {ex.StackTrace}");
+        }
     }
 
     [RelayCommand]
