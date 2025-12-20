@@ -23,9 +23,6 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _myIp = "检测中...";
-
-    [ObservableProperty]
-    private string _targetId = string.Empty;
     
     [ObservableProperty]
     private ConnectionMode _connectionMode = ConnectionMode.Manual;
@@ -206,30 +203,17 @@ public partial class MainViewModel : ObservableObject
     private void OnConnectionRejected(object? sender, int e)
     {
         LogMessage($"ID {e} 拒绝了您的连接请求");
-        LogMessage($"准备显示拒绝对话框...");
         
-        try
+        // 保存当前窗口引用
+        var progressWindow = _currentProgressWindow;
+        _currentProgressWindow = null;
+        
+        // 确保在UI线程上显示对话框并关闭窗口
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            // 保存当前窗口引用
-            var progressWindow = _currentProgressWindow;
-            _currentProgressWindow = null;
-            
-            // 确保在UI线程上显示对话框
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                LogMessage($"在UI线程上调用CustomDialog.ShowModal...");
-                var result = Controls.CustomDialog.ShowModal("请求被拒绝", $"ID {e} 拒绝了您的连接请求", false);
-                LogMessage($"对话框返回结果: {result}");
-                
-                // 然后关闭连接进度窗口
-                progressWindow?.Close();
-            });
-        }
-        catch (Exception ex)
-        {
-            LogMessage($"显示拒绝对话框时发生错误: {ex.Message}");
-            LogMessage($"错误详情: {ex.StackTrace}");
-        }
+            Controls.CustomDialog.ShowModal("请求被拒绝", $"ID {e} 拒绝了您的连接请求", false);
+            progressWindow?.Close();
+        });
     }
 
     [RelayCommand]
@@ -238,50 +222,6 @@ public partial class MainViewModel : ObservableObject
         _currentProgressWindow = new ConnectionProgressWindow(_signalRService, this);
         _currentProgressWindow.Closed += (s, e) => _currentProgressWindow = null;
         _currentProgressWindow.Show();
-    }
-
-    [RelayCommand]
-    private async Task ConnectToPeer()
-    {
-        if (string.IsNullOrWhiteSpace(TargetId))
-        {
-            Controls.CustomDialog.Show("输入错误", "请输入目标ID", false);
-            return;
-        }
-
-        if (!int.TryParse(TargetId, out var targetId))
-        {
-            Controls.CustomDialog.Show("输入错误", "ID必须是6位数字", false);
-            return;
-        }
-
-        if (targetId < 100000 || targetId > 999999)
-        {
-            Controls.CustomDialog.Show("输入错误", "ID必须是6位数字（100000-999999）", false);
-            return;
-        }
-
-        if (MyId == "未连接")
-        {
-            Controls.CustomDialog.Show("连接错误", "您尚未连接到服务器，请等待初始化完成", false);
-            return;
-        }
-
-        if (targetId.ToString() == MyId)
-        {
-            Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
-            return;
-        }
-
-        LogMessage($"正在请求连接ID {targetId}...");
-        
-        // 创建并显示连接进度窗口
-        _currentProgressWindow = new ConnectionProgressWindow(_signalRService, this);
-        _currentProgressWindow.Closed += (s, e) => _currentProgressWindow = null;
-        _currentProgressWindow.Show();
-        
-        await _signalRService.RequestConnectionAsync(targetId);
-        TargetId = string.Empty;
     }
 
     [RelayCommand]
