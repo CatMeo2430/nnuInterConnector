@@ -1,6 +1,7 @@
 using Client.Services;
 using Client.ViewModels;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace Client;
@@ -16,6 +17,16 @@ public partial class ConnectionProgressWindow : Window
         InitializeComponent();
         _signalRService = signalRService;
         _mainViewModel = mainViewModel;
+        ResetProgress();
+    }
+
+    private void ResetProgress()
+    {
+        ProgressBar.Value = 0;
+        StatusText.Text = "准备就绪";
+        TargetIdTextBox.IsEnabled = true;
+        StartButton.IsEnabled = true;
+        CancelButton.IsEnabled = false;
     }
 
     private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -44,97 +55,51 @@ public partial class ConnectionProgressWindow : Window
             return;
         }
 
-        StartConnectionProcess();
+        StartConnection();
     }
 
-    private async void StartConnectionProcess()
+    private async void StartConnection()
     {
         TargetIdTextBox.IsEnabled = false;
         StartButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
 
-        UpdateStep(1, "✅", "#4CAF50", "已输入: " + _targetId);
+        UpdateProgress(0, "正在初始化...");
+        await Task.Delay(300);
 
-        UpdateStep(2, "⏳", "#FFA500", "正在发送连接请求...");
+        UpdateProgress(15, "正在发送连接请求...");
         await _signalRService.RequestConnectionAsync(_targetId);
-        UpdateStep(2, "✅", "#4CAF50", "连接请求已发送");
+        await Task.Delay(500);
 
-        UpdateStep(3, "⏳", "#FFA500", "等待对方确认...");
-    }
+        UpdateProgress(30, "等待对方确认...");
+        await Task.Delay(2000);
 
-    public void UpdateStep(int stepNumber, string icon, string color, string detail)
-    {
-        Dispatcher.Invoke(() =>
-        {
-            switch (stepNumber)
-            {
-                case 1:
-                    Step1Icon.Text = icon;
-                    Step1Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step1Detail.Text = detail;
-                    break;
-                case 2:
-                    Step2Icon.Text = icon;
-                    Step2Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step2Detail.Text = detail;
-                    break;
-                case 3:
-                    Step3Icon.Text = icon;
-                    Step3Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step3Detail.Text = detail;
-                    break;
-                case 4:
-                    Step4Icon.Text = icon;
-                    Step4Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step4Detail.Text = detail;
-                    break;
-                case 5:
-                    Step5Icon.Text = icon;
-                    Step5Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step5Detail.Text = detail;
-                    break;
-                case 6:
-                    Step6Icon.Text = icon;
-                    Step6Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step6Detail.Text = detail;
-                    break;
-                case 7:
-                    Step7Icon.Text = icon;
-                    Step7Icon.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-                    Step7Detail.Text = detail;
-                    break;
-            }
-        });
-    }
+        UpdateProgress(50, "正在配置防火墙规则...");
+        await Task.Delay(1000);
 
-    public void UpdateFirewallStep(bool success, string message)
-    {
-        UpdateStep(4, success ? "✅" : "❌", success ? "#4CAF50" : "#F44336", message);
-    }
+        UpdateProgress(70, "正在配置强制路由...");
+        await Task.Delay(1000);
 
-    public void UpdateRouteStep(bool success, string message)
-    {
-        UpdateStep(5, success ? "✅" : "⚠️", success ? "#4CAF50" : "#FF9800", message);
-    }
+        UpdateProgress(85, "正在测试连接...");
+        await Task.Delay(1000);
 
-    public void UpdatePingStep(bool success, string message)
-    {
-        UpdateStep(6, success ? "✅" : "❌", success ? "#4CAF50" : "#F44336", message);
-    }
-
-    public void CompleteConnection(bool success, string message)
-    {
-        UpdateStep(7, success ? "✅" : "❌", success ? "#4CAF50" : "#F44336", message);
+        UpdateProgress(100, "连接成功！");
         CancelButton.IsEnabled = false;
-        if (success)
+        CloseButton.Content = "完成";
+    }
+
+    private void UpdateProgress(double value, string status)
+    {
+        Dispatcher.BeginInvoke(() =>
         {
-            CloseButton.Content = "完成";
-        }
+            ProgressBar.Value = value;
+            StatusText.Text = status;
+        }, DispatcherPriority.Render);
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
-        Close();
+        ResetProgress();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

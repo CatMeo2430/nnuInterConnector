@@ -5,26 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="发起互联" 
-        Height="600" Width="500"
+        Title="互联协商" 
+        Height="320" Width="400"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5"
-        WindowStyle="ToolWindow">
+        Background="Transparent"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        FontFamily="Segoe UI, Microsoft YaHei">
 
     <Window.Resources>
-        <Style TargetType="Button">
+        <Style x:Key="ModernButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#0078D4"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="4"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="4"
+                                CornerRadius="6"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -45,162 +48,109 @@
             </Setter>
         </Style>
 
-        <Style TargetType="TextBox">
+        <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#E0E0E0"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
+                                CornerRadius="6">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="2"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <Style x:Key="StepItemStyle" TargetType="Grid">
-            <Setter Property="Margin" Value="0,8"/>
-        </Style>
-
-        <Style x:Key="StatusIconStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Width" Value="24"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#F8F9FA" Offset="0"/>
+                <GradientStop Color="#E9ECEF" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,20">
-            <TextBlock Text="对方ID: " FontSize="14" FontWeight="Medium" Foreground="#555555" VerticalAlignment="Center" Margin="0,0,8,0"/>
-            <TextBox x:Name="TargetIdTextBox"
-                     Width="180" Height="36" 
-                     FontSize="14" 
-                     VerticalContentAlignment="Center"
-                     ToolTip="输入对方的6位数字ID"/>
-            <Button x:Name="StartButton"
-                    Content="开始互联" 
-                    Margin="15,0,0,0"
-                    Click="StartButton_Click"
-                    ToolTip="开始发起互联请求"/>
-        </StackPanel>
+        <Border Background="White" CornerRadius="16" Margin="12" BorderBrush="#E0E0E0" BorderThickness="1">
+            <Grid Margin="24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock Text="互联进度" FontSize="18" FontWeight="Bold" Foreground="#333333" Margin="0,0,0,16"/>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,20">
+                    <Border Background="#E3F2FD" CornerRadius="8" Padding="10" Margin="0,0,12,0">
+                        <TextBlock Text="对方ID" FontSize="13" FontWeight="Medium" Foreground="#1976D2"/>
+                    </Border>
+                    <TextBox x:Name="TargetIdTextBox"
+                             Style="{StaticResource ModernTextBoxStyle}"
+                             Width="140" Height="36" 
+                             FontSize="13"
+                             VerticalContentAlignment="Center"
+                             ToolTip="输入对方的6位数字ID"/>
+                    <Button x:Name="StartButton"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Content="开始" 
+                            Height="36"
+                            Padding="16,0"
+                            Margin="12,0,0,0"
+                            Click="StartButton_Click"
+                            ToolTip="开始发起互联请求"/>
+                </StackPanel>
 
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step1Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="输入对方ID" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step1Detail" Text="等待输入..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
+                <TextBlock Grid.Row="1" Text="正在建立连接..." FontSize="16" FontWeight="SemiBold" Foreground="#333333" Margin="0,0,0,16"/>
+
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ProgressBar x:Name="ProgressBar" 
+                                 Grid.Row="0" 
+                                 Height="8" 
+                                 Margin="0,10,0,16"
+                                 Foreground="#0078D4"
+                                 Background="#E0E0E0"
+                                 BorderThickness="0"/>
+
+                    <TextBlock x:Name="StatusText" 
+                               Grid.Row="1" 
+                               Text="准备就绪" 
+                               FontSize="14" 
+                               Foreground="#666666"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"/>
                 </Grid>
 
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step2Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="发送连接请求" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step2Detail" Text="等待发送..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step3Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="等待对方确认" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step3Detail" Text="等待确认..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step4Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="配置防火墙规则" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step4Detail" Text="等待配置..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step5Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="配置强制路由" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step5Detail" Text="等待配置..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step6Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="Ping测试" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step6Detail" Text="等待测试..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-
-                <Grid Style="{StaticResource StepItemStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" x:Name="Step7Icon" Text="⏳" Style="{StaticResource StatusIconStyle}" Foreground="#FFA500"/>
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="连接成功" FontSize="15" FontWeight="SemiBold" Foreground="#333333"/>
-                        <TextBlock x:Name="Step7Detail" Text="等待完成..." FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </ScrollViewer>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button x:Name="CancelButton"
-                    Content="取消" 
-                    Background="#6C757D"
-                    IsEnabled="False"
-                    Click="CancelButton_Click"
-                    ToolTip="取消本次互联请求"/>
-            <Button x:Name="CloseButton"
-                    Content="关闭" 
-                    Click="CloseButton_Click"
-                    ToolTip="关闭窗口"/>
-        </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button x:Name="CancelButton"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Content="取消" 
+                            Background="#6C757D"
+                            Height="36"
+                            Padding="16,0"
+                            IsEnabled="False"
+                            Click="CancelButton_Click"
+                            ToolTip="取消本次互联请求"/>
+                    <Button x:Name="CloseButton"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Content="关闭" 
+                            Height="36"
+                            Padding="16,0"
+                            Margin="8,0,0,0"
+                            Click="CloseButton_Click"
+                            ToolTip="关闭窗口"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

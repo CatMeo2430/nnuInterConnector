@@ -11,8 +11,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/Client/MainWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/MainWindow.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,8 +40,7 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Helper/Program.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Server/appsettings.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/App.xaml" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -143,7 +143,7 @@
       <workItem from="1766020092024" duration="2312000" />
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
-      <workItem from="1766149096587" duration="13450000" />
+      <workItem from="1766149096587" duration="16439000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -209,7 +209,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766199213035</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Dev 0.1.1.1-3_1&#10;新增互联协商窗口">
+      <option name="closed" value="true" />
+      <created>1766201019973</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1766201019973</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -238,7 +246,8 @@
     <MESSAGE value="Dev 0.1.0.1&#10;修正README.md&#10;修复10.20网段无法连接服务器的问题" />
     <MESSAGE value="Dev 0.1.1.1-1&#10;美化GUI" />
     <MESSAGE value="Dev 0.1.1.1-2&#10;美化IP/ID界面" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.1.1-2&#10;美化IP/ID界面" />
+    <MESSAGE value="Dev 0.1.1.1-3_1&#10;新增互联协商窗口" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.1.1-3_1&#10;新增互联协商窗口" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
