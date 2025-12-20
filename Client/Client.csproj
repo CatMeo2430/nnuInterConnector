@@ -3,17 +3,46 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0-windows</TargetFramework>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        
+        <!-- 单文件发布配置 -->
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <PublishTrimmed>false</PublishTrimmed>
+        
+        <!-- 应用程序元数据 -->
+        <AssemblyTitle>NNU InterConnector</AssemblyTitle>
+        <AssemblyDescription>校园网P2P直连互联工具</AssemblyDescription>
+        <AssemblyCompany>NNU</AssemblyCompany>
+        <AssemblyProduct>NNU InterConnector</AssemblyProduct>
+        <AssemblyCopyright>Copyright © 2026</AssemblyCopyright>
+        <AssemblyVersion>1.1.0.0</AssemblyVersion>
+        <FileVersion>1.1.0.0</FileVersion>
+        <ApplicationIcon>Resources\icon_32x32.ico</ApplicationIcon>
     </PropertyGroup>
 
       <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11" />
-        <PackageReference Include="Serilog" Version="4.2.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="appsettings.json" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+        <PublishDir>$(MSBuildProjectDirectory)\Publish</PublishDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <SplashScreen Include="Resources\start.png" />
     </ItemGroup>
 
 </Project>

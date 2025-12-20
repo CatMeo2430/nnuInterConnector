@@ -65,7 +65,16 @@ public partial class ConnectionProgressWindow : Window
 
         if (_targetId.ToString() == _mainViewModel.MyId)
         {
-            Controls.CustomDialog.Show("输入错误", "不能连接到自己", false);
+            Controls.CustomDialog.ShowModal("输入错误", "不能连接到自己", false);
+            Close();
+            return;
+        }
+
+        // 检查是否已连接
+        var existingConnection = _signalRService.Connections.FirstOrDefault(c => c.PeerId == _targetId);
+        if (existingConnection != null)
+        {
+            Controls.CustomDialog.ShowModal("已建立互联", $"与 ID {_targetId} 的互联已建立", false);
             Close();
             return;
         }
@@ -158,6 +167,9 @@ public partial class ConnectionProgressWindow : Window
             1 => "目标ID不存在",
             2 => "目标不在线",
             3 => "连接超时",
+            4 => "重复请求",
+            5 => "已被永久拒绝",
+            6 => "冷却期中，请等待",
             _ => "未知错误"
         };
         
@@ -165,8 +177,12 @@ public partial class ConnectionProgressWindow : Window
         {
             StatusText.Text = $"连接失败: {errorMessage}";
             UpdateProgress(0, "连接失败");
-            // 延迟关闭窗口，让用户看到错误信息
-            Task.Delay(2000).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
+            
+            // 弹窗告知用户具体原因
+            Controls.CustomDialog.ShowModal("连接失败", errorMessage, false);
+            
+            // 延迟关闭窗口
+            Task.Delay(500).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
         });
         
         _connectionResult.TrySetResult(false);
@@ -204,6 +220,12 @@ public partial class ConnectionProgressWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
+        // 如果正在连接，发送取消请求
+        if (_isConnecting && _targetId > 0)
+        {
+            _ = _signalRService.CancelConnectionAsync(_targetId);
+        }
+        
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;
@@ -212,6 +234,12 @@ public partial class ConnectionProgressWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        // 如果正在连接，发送取消请求
+        if (_isConnecting && _targetId > 0)
+        {
+            _ = _signalRService.CancelConnectionAsync(_targetId);
+        }
+        
         // 取消订阅事件
         _signalRService.ConnectionFailed -= OnConnectionFailed;
         _signalRService.ConnectionEstablished -= OnConnectionEstablished;

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.Hubs;
 using System.Collections.Concurrent;
 
 namespace Server.Controllers;
@@ -10,6 +9,7 @@ public class RegistrationController : ControllerBase
 {
     private static readonly ConcurrentDictionary<string, string> _pendingRegistrations = new();
     private readonly ILogger<RegistrationController> _logger;
+    private const int MaxPendingRegistrations = 10000;
 
     public RegistrationController(ILogger<RegistrationController> logger)
     {
@@ -33,9 +33,30 @@ public class RegistrationController : ControllerBase
             return BadRequest(new { error = "IP address is required" });
         }
 
+        CleanupOldRegistrations();
+        
+        if (_pendingRegistrations.Count >= MaxPendingRegistrations)
+        {
+            _logger.LogWarning("Registration queue is full");
+            return StatusCode(503, new { error = "Server is busy, please try again later" });
+        }
+
         _pendingRegistrations[clientUuid] = clientIp;
         _logger.LogInformation("Client registration request: UUID={Uuid}, IP={Ip}", clientUuid, clientIp);
         return Ok(new { message = "等待WebSocket连接完成注册" });
+    }
+
+    private void CleanupOldRegistrations()
+    {
+        if (_pendingRegistrations.Count > MaxPendingRegistrations * 0.9)
+        {
+            var oldRegistrations = _pendingRegistrations.Keys.Take(100).ToList();
+            foreach (var uuid in oldRegistrations)
+            {
+                _pendingRegistrations.TryRemove(uuid, out _);
+            }
+            _logger.LogInformation("Cleaned up {Count} old registration entries", oldRegistrations.Count);
+        }
     }
 
     public static string? GetPendingIp(string uuid)

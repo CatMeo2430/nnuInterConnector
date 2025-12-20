@@ -5,8 +5,21 @@ namespace Client.Services;
 
 public class NetworkService
 {
+    // 支持的校园网网段列表
+    private static readonly string[] CampusNetworkPrefixes = new[]
+    {
+        "10.0.", "10.7.", "10.20.", "10.24.", "10.28.", "10.29.",
+        "10.30.", "10.100.", "10.128.", "10.132.", "10.136.", "10.137.",
+        "10.247.", "10.252.", "10.253."
+    };
+    
+    private static string? _cachedIp;
+
     public static string GetCampusNetworkIp()
     {
+        if (!string.IsNullOrEmpty(_cachedIp))
+            return _cachedIp;
+            
         try
         {
             foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
@@ -24,17 +37,21 @@ public class NetworkService
                     if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
                     {
                         var ipString = ip.Address.ToString();
-                        if (ipString.StartsWith("10.20.") || ipString.StartsWith("10.30."))
+                        foreach (var prefix in CampusNetworkPrefixes)
                         {
-                            return ipString;
+                            if (ipString.StartsWith(prefix))
+                            {
+                                _cachedIp = ipString;
+                                return ipString;
+                            }
                         }
                     }
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Serilog.Log.Error(ex, "Failed to get campus network IP");
+            // 静默处理异常，返回空字符串
         }
 
         return string.Empty;
@@ -53,10 +70,15 @@ public class NetworkService
 
     public static string GetGatewayForIp(string ip)
     {
-        if (ip.StartsWith("10.20."))
-            return "10.20.0.1";
-        if (ip.StartsWith("10.30."))
-            return "10.30.0.1";
+        foreach (var prefix in CampusNetworkPrefixes)
+        {
+            if (ip.StartsWith(prefix))
+            {
+                // 从前缀中提取第二段数字，如"10.20." -> "20"
+                var secondOctet = prefix.Split('.')[1];
+                return $"10.{secondOctet}.0.1";
+            }
+        }
         return string.Empty;
     }
 }

@@ -11,4 +11,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <PublishDir>$(MSBuildProjectDirectory)\Publish</PublishDir>
+    </PropertyGroup>
 </Project>
