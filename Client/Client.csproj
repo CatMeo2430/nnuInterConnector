@@ -11,7 +11,7 @@
         
         <!-- 单文件发布配置 -->
         <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
+        <SelfContained>false</SelfContained>
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <PublishReadyToRun>true</PublishReadyToRun>
@@ -22,7 +22,7 @@
         <AssemblyDescription>校园网P2P直连互联工具</AssemblyDescription>
         <AssemblyCompany>NNU</AssemblyCompany>
         <AssemblyProduct>NNU InterConnector</AssemblyProduct>
-        <AssemblyCopyright>Copyright © 2024</AssemblyCopyright>
+        <AssemblyCopyright>Copyright © 2026</AssemblyCopyright>
         <AssemblyVersion>1.1.0.0</AssemblyVersion>
         <FileVersion>1.1.0.0</FileVersion>
         <ApplicationIcon>Resources\icon_32x32.ico</ApplicationIcon>
@@ -44,7 +44,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Resources\" />
+      <SplashScreen Include="Resources\start.png" />
     </ItemGroup>
 
 </Project>

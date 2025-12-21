@@ -1,3 +1,4 @@
+using System;
 using Client.Controls;
 using Client.Models;
 using Client.Services;
@@ -5,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 

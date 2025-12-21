@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
@@ -183,12 +184,12 @@ public class SignalRService
             StartHeartbeat();
         });
 
-        _connection.On<int, string>("ConnectionRequest", (requesterId, requesterIp) =>
+        _connection.On<int, string>("ConnectionRequest", new Action<int, string>((requesterId, requesterIp) =>
         {
             ConnectionRequestReceived?.Invoke(this, (requesterId, requesterIp));
-        });
+        }));
 
-        _connection.On<int, string>("ConnectionEstablished", (peerId, peerIp) =>
+        _connection.On<int, string>("ConnectionEstablished", new Action<int, string>((peerId, peerIp) =>
         {
             var connection = new ConnectionInfo
             {
@@ -214,36 +215,36 @@ public class SignalRService
                     connection.Status = success ? "已连接" : "配置失败";
                 });
             });
-        });
+        }));
 
-        _connection.On<int>("ConnectionFailed", errorCode =>
+        _connection.On<int>("ConnectionFailed", new Action<int>(errorCode =>
         {
             ConnectionFailed?.Invoke(this, errorCode);
-        });
+        }));
 
-        _connection.On<int>("ConnectionRejected", rejecterId =>
+        _connection.On<int>("ConnectionRejected", new Action<int>(rejecterId =>
         {
             ConnectionRejected?.Invoke(this, rejecterId);
-        });
+        }));
 
-        _connection.On<int>("ConnectionTimeout", requesterId =>
+        _connection.On<int>("ConnectionTimeout", new Action<int>(requesterId =>
         {
             ConnectionTimeout?.Invoke(this, requesterId);
-        });
+        }));
 
-        _connection.On<int>("ConnectionCancelled", requesterId =>
+        _connection.On<int>("ConnectionCancelled", new Action<int>(requesterId =>
         {
             ConnectionCancelled?.Invoke(this, requesterId);
-        });
+        }));
 
-        _connection.On<int, string>("PeerDisconnected", async (peerId, peerIp) =>
+        _connection.On<int, string>("PeerDisconnected", new Func<int, string, Task>(async (peerId, peerIp) =>
         {
             var connectionToRemove = Connections.FirstOrDefault(c => c.PeerId == peerId);
             if (connectionToRemove != null)
             {
                 await CleanupPeerConnectionAsync(connectionToRemove);
             }
-        });
+        }));
 
         _connection.Closed += async (error) =>
         {
