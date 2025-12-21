@@ -4,3 +4,5 @@ Release/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+Server/Publish/
+Client/Publish/

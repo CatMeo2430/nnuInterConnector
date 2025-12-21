@@ -27,8 +27,56 @@ public class SignalRService
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .Build();
+        
+        // 如果配置文件不存在（单文件发布），从嵌入资源读取
+        if (string.IsNullOrEmpty(configuration["ServerConfig:IpAddress"]))
+        {
+            var assembly = typeof(SignalRService).Assembly;
+            
+            // 调试：输出所有嵌入资源名称
+            var resourceNames = assembly.GetManifestResourceNames();
+            
+            // 尝试不同的资源名称格式
+            string[] possibleNames = new[]
+            {
+                "Client.appsettings.json",
+                "appsettings.json",
+                "Client.Services.appsettings.json"
+            };
+            
+            System.IO.Stream? stream = null;
+            foreach (var name in possibleNames)
+            {
+                stream = assembly.GetManifestResourceStream(name);
+                if (stream != null)
+                    break;
+            }
+            
+            if (stream != null)
+            {
+                configuration = new ConfigurationBuilder()
+                    .AddJsonStream(stream)
+                    .Build();
+            }
+            else
+            {
+                // 如果没有找到嵌入资源，使用默认值
+                var defaultConfig = @"{
+                    ""ServerConfig"": {
+                        ""IpAddress"": ""10.20.214.145"",
+                        ""HttpPort"": ""8080"",
+                        ""WebSocketPort"": ""8081""
+                    }
+                }";
+                
+                using var defaultStream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(defaultConfig));
+                configuration = new ConfigurationBuilder()
+                    .AddJsonStream(defaultStream)
+                    .Build();
+            }
+        }
         
         var serverConfig = configuration.GetSection("ServerConfig");
         _serverIpAddress = serverConfig["IpAddress"] ?? throw new InvalidOperationException("ServerConfig:IpAddress not configured");
