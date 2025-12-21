@@ -12,9 +12,14 @@ public class NetworkService
         "10.30.", "10.100.", "10.128.", "10.132.", "10.136.", "10.137.",
         "10.247.", "10.252.", "10.253."
     };
+    
+    private static string? _cachedIp;
 
     public static string GetCampusNetworkIp()
     {
+        if (!string.IsNullOrEmpty(_cachedIp))
+            return _cachedIp;
+            
         try
         {
             foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
@@ -36,6 +41,7 @@ public class NetworkService
                         {
                             if (ipString.StartsWith(prefix))
                             {
+                                _cachedIp = ipString;
                                 return ipString;
                             }
                         }

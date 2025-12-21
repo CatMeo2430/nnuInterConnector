@@ -12,8 +12,6 @@
         <!-- 单文件发布配置 -->
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>false</SelfContained>
-        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishTrimmed>false</PublishTrimmed>
         

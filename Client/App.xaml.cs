@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.Windows;
-using System.Windows.Threading;
 using System.Threading.Tasks;
 using Client.ViewModels;
 using Client.Controls;
@@ -16,24 +14,24 @@ public partial class App : Application
         
         try
         {
-            // 延迟显示主窗口，给用户一个启动的感觉
-            await Task.Delay(300);
-            
             var mainWindow = new MainWindow();
             
-            try
-            {
-                var viewModel = new MainViewModel();
-                mainWindow.DataContext = viewModel;
-            }
-            catch (Exception ex)
-            {
-                CustomDialog.ShowModal("启动错误", $"程序初始化失败: {ex.Message}\n\n请确保：\n1. 已连接到校园网\n2. 配置文件正确\n3. 以管理员权限运行", false);
-                Shutdown(1);
-                return;
-            }
+            // 异步初始化ViewModel，不阻塞UI
+            var viewModel = new MainViewModel();
             
+            // 立即显示主窗口，ViewModel在后台初始化
+            mainWindow.DataContext = viewModel;
             mainWindow.Show();
+            
+            // 等待初始化完成（最多1秒）
+            var initTask = viewModel.WaitForInitializationAsync();
+            var timeoutTask = Task.Delay(1000);
+            
+            var completedTask = await Task.WhenAny(initTask, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                // 如果1秒内未完成，继续运行，让用户看到部分加载的界面
+            }
         }
         catch (Exception ex)
         {

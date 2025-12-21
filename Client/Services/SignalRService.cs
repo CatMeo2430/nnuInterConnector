@@ -106,7 +106,10 @@ public class SignalRService
         {
             _uuid = Guid.NewGuid().ToString();
             
-            _ipAddress = NetworkService.GetCampusNetworkIp();
+            // 并行执行网络检测和配置加载
+            var networkTask = Task.Run(() => NetworkService.GetCampusNetworkIp());
+            
+            _ipAddress = await networkTask;
 
             if (string.IsNullOrEmpty(_ipAddress))
             {
@@ -119,8 +122,11 @@ public class SignalRService
                 RouteService.AddRoute(_serverIpAddress, "10.20.0.1");
             }
 
-            await RegisterWithHttpAsync();
-            await ConnectToSignalRAsync();
+            // 并行执行HTTP注册和SignalR连接
+            var httpTask = RegisterWithHttpAsync();
+            var signalRTask = ConnectToSignalRAsync();
+            
+            await Task.WhenAll(httpTask, signalRTask);
         }
         catch (Exception ex)
         {

@@ -17,6 +17,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SignalRService _signalRService;
     private ConnectionProgressWindow? _currentProgressWindow;
     private readonly ConcurrentDictionary<int, Controls.CustomDialog> _pendingDialogs = new();
+    private readonly TaskCompletionSource<bool> _initializationTcs = new();
 
     [ObservableProperty]
     private string _myId = "未连接";
@@ -28,6 +29,8 @@ public partial class MainViewModel : ObservableObject
     private ConnectionMode _connectionMode = ConnectionMode.Manual;
 
     public ObservableCollection<ConnectionInfo> Connections => _signalRService.Connections;
+    
+    public Task WaitForInitializationAsync() => _initializationTcs.Task;
 
     private void SafeCopyToClipboard(string text, string itemName)
     {
@@ -103,6 +106,9 @@ public partial class MainViewModel : ObservableObject
         {
             MyId = id.ToString();
         });
+        
+        // 标记初始化完成
+        _initializationTcs.TrySetResult(true);
     }
 
     private void OnConnectionRequestReceived(object? sender, (int, string) e)
