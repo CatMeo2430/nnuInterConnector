@@ -52,7 +52,10 @@ try
     app.MapControllers();
     app.MapHub<InterconnectionHub>("/interconnectionHub");
     
-    using var cleanupTimer = new System.Threading.Timer(async _ =>
+    const int CleanupIntervalMinutes = 1;
+    const int InitialDelayMinutes = 1;
+    
+    using var cleanupTimer = new System.Threading.Timer(_ =>
     {
         try
         {
@@ -61,13 +64,13 @@ try
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<InterconnectionHub>>();
             
             var hub = new InterconnectionHub(logger, hubContext);
-            await hub.CleanupInactiveClients(TimeSpan.FromMinutes(InterconnectionHub.HEARTBEAT_TIMEOUT_MINUTES));
+            hub.CleanupInactiveClients(TimeSpan.FromMinutes(InterconnectionHub.HEARTBEAT_TIMEOUT_MINUTES)).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "清理非活动客户端时发生错误");
         }
-    }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }, null, TimeSpan.FromMinutes(InitialDelayMinutes), TimeSpan.FromMinutes(CleanupIntervalMinutes));
     
     Log.Information("Server listening on HTTP: http://{IpAddress}:{HttpPort}", ipAddress, httpPort);
     Log.Information("Server listening on WebSocket: ws://{IpAddress}:{WebSocketPort}", ipAddress, webSocketPort);

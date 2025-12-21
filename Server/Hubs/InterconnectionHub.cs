@@ -5,23 +5,26 @@ using System.Threading.Tasks;
 
 namespace Server.Hubs;
 
+public enum ConnectionErrorCode
+{
+    TargetNotFound = 1,
+    TargetOffline = 2,
+    ConnectionTimeout = 3,
+    DuplicateRequest = 4,
+    PermanentReject = 5,
+    InCooldown = 6,
+    InvalidId = 7
+}
+
 public class InterconnectionHub : Hub
 {
-    // 连接超时时间（秒）
     private const int CONNECTION_TIMEOUT_SECONDS = 30;
-    
-    // 冷却期时间（分钟）
     private const int COOLDOWN_MINUTES = 1;
-    
-    // 永久拒绝阈值（被拒绝次数）
     private const int PERMANENT_REJECT_THRESHOLD = 3;
-    
-    // 心跳超时时间（分钟）
     public const int HEARTBEAT_TIMEOUT_MINUTES = 2;
-    
-    // 随机ID范围
     private const int MIN_CLIENT_ID = 100000;
     private const int MAX_CLIENT_ID = 999999;
+    private const int MAX_ID_GENERATION_ATTEMPTS = 100;
     
     private static readonly ConcurrentDictionary<int, ClientInfo> _clients = new();
     private static readonly ConcurrentDictionary<string, int> _uuidToId = new();
@@ -65,11 +68,12 @@ public class InterconnectionHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var disconnectedClient = _clients.FirstOrDefault(kvp => kvp.Value.ConnectionId == Context.ConnectionId);
-        var disconnectedClientId = disconnectedClient.Key;
-        var disconnectedClientIp = disconnectedClient.Value?.IpAddress;
-
-        if (disconnectedClientId != 0)
+        
+        if (disconnectedClient.Key != 0 && disconnectedClient.Value != null)
         {
+            var disconnectedClientId = disconnectedClient.Key;
+            var disconnectedClientIp = disconnectedClient.Value.IpAddress;
+
             if (_connections.TryRemove(disconnectedClientId, out var connectedClients))
             {
                 foreach (var connectedClientId in connectedClients)
@@ -152,7 +156,7 @@ public class InterconnectionHub : Hub
     {
         if (targetId < MIN_CLIENT_ID || targetId > MAX_CLIENT_ID)
         {
-            await Clients.Caller.SendAsync("ConnectionFailed", 7);
+            await Clients.Caller.SendAsync("ConnectionFailed", (int)ConnectionErrorCode.InvalidId);
             return;
         }
 
@@ -162,16 +166,15 @@ public class InterconnectionHub : Hub
         if (!_clients.TryGetValue(targetId, out var targetInfo))
         {
             _logger.LogInformation("[{RequesterId}] Connection request failed: Target ID {TargetId} does not exist", requesterId, targetId);
-            await Clients.Caller.SendAsync("ConnectionFailed", 1); // 1 = 目标ID不存在
+            await Clients.Caller.SendAsync("ConnectionFailed", (int)ConnectionErrorCode.TargetNotFound);
             return;
         }
 
-        // 检查请求者是否已有待处理的请求（无论目标是谁）
         var hasPendingRequest = _pendingRequests.Keys.Any(k => k.requesterId == requesterId);
         if (hasPendingRequest)
         {
             _logger.LogInformation("[{RequesterId}] Connection request rejected: Already has a pending request", requesterId);
-            await Clients.Caller.SendAsync("ConnectionFailed", 4); // 4 = 重复请求
+            await Clients.Caller.SendAsync("ConnectionFailed", (int)ConnectionErrorCode.DuplicateRequest);
             return;
         }
 
@@ -179,21 +182,19 @@ public class InterconnectionHub : Hub
         var rejectKey = (requesterId, targetId);
         if (_rejectHistory.TryGetValue(rejectKey, out var rejectInfo))
         {
-            // 检查是否达到永久拒绝阈值
             if (rejectInfo.rejectCount >= PERMANENT_REJECT_THRESHOLD)
             {
                 _logger.LogInformation("[{RequesterId}] Connection request permanently rejected: Has been rejected {RejectCount} times by {TargetId}", requesterId, rejectInfo.rejectCount, targetId);
-                await Clients.Caller.SendAsync("ConnectionFailed", 5); // 5 = 永久拒绝
+                await Clients.Caller.SendAsync("ConnectionFailed", (int)ConnectionErrorCode.PermanentReject);
                 return;
             }
             
-            // 检查冷却期
             var timeSinceLastReject = DateTime.UtcNow - rejectInfo.lastRejectTime;
             if (timeSinceLastReject < TimeSpan.FromMinutes(COOLDOWN_MINUTES))
             {
                 var remainingSeconds = (int)(TimeSpan.FromMinutes(COOLDOWN_MINUTES) - timeSinceLastReject).TotalSeconds;
                 _logger.LogInformation("[{RequesterId}] Connection request rejected: In cooldown period for {TargetId}, remaining {RemainingSeconds}s", requesterId, targetId, remainingSeconds);
-                await Clients.Caller.SendAsync("ConnectionFailed", 6); // 6 = 冷却期中
+                await Clients.Caller.SendAsync("ConnectionFailed", (int)ConnectionErrorCode.InCooldown);
                 return;
             }
         }
@@ -347,9 +348,15 @@ public class InterconnectionHub : Hub
     private int GenerateUniqueId()
     {
         int id;
+        int attempts = 0;
         do
         {
             id = _random.Next(MIN_CLIENT_ID, MAX_CLIENT_ID + 1);
+            attempts++;
+            if (attempts > MAX_ID_GENERATION_ATTEMPTS)
+            {
+                throw new InvalidOperationException("无法生成唯一的客户端ID，ID池可能已耗尽");
+            }
         } while (_clients.ContainsKey(id));
 
         return id;

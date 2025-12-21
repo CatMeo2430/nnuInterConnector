@@ -3,7 +3,6 @@ using Client.Models;
 using Client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -26,25 +25,26 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ConnectionMode _connectionMode = ConnectionMode.Manual;
 
-    partial void OnConnectionModeChanged(ConnectionMode value)
-    {
-    }
-
     public ObservableCollection<ConnectionInfo> Connections => _signalRService.Connections;
+
+    private void SafeCopyToClipboard(string text, string itemName)
+    {
+        try
+        {
+            Clipboard.SetText(text);
+        }
+        catch (Exception ex)
+        {
+            Controls.CustomDialog.Show("错误", $"复制{itemName}失败: {ex.Message}", false);
+        }
+    }
 
     [RelayCommand]
     private void CopyPeerId(object? parameter)
     {
         if (parameter is int peerId)
         {
-            try
-            {
-                Clipboard.SetText(peerId.ToString());
-            }
-            catch (Exception ex)
-            {
-                Controls.CustomDialog.Show("错误", $"复制ID失败: {ex.Message}", false);
-            }
+            SafeCopyToClipboard(peerId.ToString(), "ID");
         }
     }
 
@@ -53,14 +53,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is string peerIp)
         {
-            try
-            {
-                Clipboard.SetText(peerIp);
-            }
-            catch (Exception ex)
-            {
-                Controls.CustomDialog.Show("错误", $"复制IP失败: {ex.Message}", false);
-            }
+            SafeCopyToClipboard(peerIp, "IP");
         }
     }
 
@@ -69,14 +62,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is string status)
         {
-            try
-            {
-                Clipboard.SetText(status);
-            }
-            catch (Exception ex)
-            {
-                Controls.CustomDialog.Show("错误", $"复制状态失败: {ex.Message}", false);
-            }
+            SafeCopyToClipboard(status, "状态");
         }
     }
 
@@ -85,15 +71,8 @@ public partial class MainViewModel : ObservableObject
     {
         if (parameter is DateTime time)
         {
-            try
-            {
-                var timeString = time.ToString("yyyy-MM-dd HH:mm:ss");
-                Clipboard.SetText(timeString);
-            }
-            catch (Exception ex)
-            {
-                Controls.CustomDialog.Show("错误", $"复制时间失败: {ex.Message}", false);
-            }
+            var timeString = time.ToString("yyyy-MM-dd HH:mm:ss");
+            SafeCopyToClipboard(timeString, "时间");
         }
     }
 

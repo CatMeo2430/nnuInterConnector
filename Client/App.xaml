@@ -53,11 +53,9 @@
                                 CornerRadius="4">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="2"/>
                         </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <local:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
-    </Application.Resources>
-</Application>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                        </Application.Resources>
+                    </Application>

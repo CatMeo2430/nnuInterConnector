@@ -2,8 +2,10 @@ using Client.Controls;
 using Client.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.ObjectModel;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace Client.Services;
@@ -18,6 +20,8 @@ public class SignalRService
     private readonly string _serverIpAddress;
     private readonly int _httpPort;
     private readonly int _webSocketPort;
+    private const int HeartbeatIntervalMs = 30000;
+    private const int NetworkErrorDelayMs = 3000;
     
     public SignalRService()
     {
@@ -57,18 +61,13 @@ public class SignalRService
 
             if (string.IsNullOrEmpty(_ipAddress))
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Controls.CustomDialog.ShowModal("网络错误", "请在NNU仙林校区校园网内使用", false);
-                });
-                await Task.Delay(3000);
-                Environment.Exit(1);
+                await ShowErrorAndExitAsync("网络错误", "请在NNU仙林校区校园网内使用");
                 return;
             }
 
             if (_ipAddress.StartsWith("10.20."))
             {
-                var routeSuccess = RouteService.AddRoute(_serverIpAddress, "10.20.0.1");
+                RouteService.AddRoute(_serverIpAddress, "10.20.0.1");
             }
 
             await RegisterWithHttpAsync();
@@ -76,11 +75,26 @@ public class SignalRService
         }
         catch (Exception ex)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                Controls.CustomDialog.ShowModal("初始化失败", $"初始化失败: {ex.Message}\n请检查网络连接和服务器配置", false);
-            });
+            ShowErrorModal("初始化失败", $"初始化失败: {ex.Message}\n请检查网络连接和服务器配置");
         }
+    }
+
+    private async Task ShowErrorAndExitAsync(string title, string message)
+    {
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            Controls.CustomDialog.ShowModal(title, message, false);
+        });
+        await Task.Delay(NetworkErrorDelayMs);
+        Application.Current.Shutdown(1);
+    }
+
+    private void ShowErrorModal(string title, string message)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            Controls.CustomDialog.ShowModal(title, message, false);
+        });
     }
 
     private async Task RegisterWithHttpAsync()
@@ -197,23 +211,17 @@ public class SignalRService
         }
         catch (System.Net.Http.HttpRequestException ex)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                Controls.CustomDialog.ShowModal("连接失败", $"无法连接到服务器 {new Uri(_serverUrl).Host}\n请检查：1. 网络连接 2. 服务器地址配置 3. 服务器是否运行\n详细错误: {ex.Message}", false);
-            });
+            ShowErrorModal("连接失败", $"无法连接到服务器 {new Uri(_serverUrl).Host}\n请检查：1. 网络连接 2. 服务器地址配置 3. 服务器是否运行\n详细错误: {ex.Message}");
         }
         catch (Exception ex)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                Controls.CustomDialog.ShowModal("连接失败", $"WebSocket连接失败: {ex.Message}\n请检查服务器配置和网络连接", false);
-            });
+            ShowErrorModal("连接失败", $"WebSocket连接失败: {ex.Message}\n请检查服务器配置和网络连接");
         }
     }
 
     private void StartHeartbeat()
     {
-        _heartbeatTimer = new System.Timers.Timer(30000);
+        _heartbeatTimer = new System.Timers.Timer(HeartbeatIntervalMs);
         _heartbeatTimer.Elapsed += async (sender, e) =>
         {
             if (_connection?.State == HubConnectionState.Connected)
@@ -224,10 +232,7 @@ public class SignalRService
                 }
                 catch (Exception ex)
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Controls.CustomDialog.ShowModal("心跳更新失败", $"心跳更新失败: {ex.Message}", false);
-                    });
+                    ShowErrorModal("心跳更新失败", $"心跳更新失败: {ex.Message}");
                 }
             }
         };
@@ -253,30 +258,22 @@ public class SignalRService
                     gateway = NetworkService.GetGatewayForIp(_ipAddress);
                 }
 
-                var firewallSuccess = FirewallService.AddFirewallRule(peerIp);
-                if (!firewallSuccess)
+                if (!FirewallService.AddFirewallRule(peerIp))
                 {
                     return false;
                 }
 
-                if (!string.IsNullOrEmpty(gateway))
+                if (!string.IsNullOrEmpty(gateway) && !RouteService.AddRoute(peerIp, gateway))
                 {
-                    var routeSuccess = RouteService.AddRoute(peerIp, gateway);
-                    if (!routeSuccess)
-                    {
-                        FirewallService.RemoveFirewallRule(peerIp);
-                        return false;
-                    }
+                    FirewallService.RemoveFirewallRule(peerIp);
+                    return false;
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Controls.CustomDialog.ShowModal("配置失败", $"配置连接失败: {ex.Message}\n请重试或检查系统配置", false);
-                });
+                ShowErrorModal("配置失败", $"配置连接失败: {ex.Message}\n请重试或检查系统配置");
                 return false;
             }
         });
@@ -320,24 +317,24 @@ public class SignalRService
         {
             try
             {
-                App.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     connection.Status = "断开中";
                 });
 
-                var firewallSuccess = FirewallService.RemoveFirewallRule(connection.PeerIp);
-                var routeSuccess = RouteService.RemoveRoute(connection.PeerIp);
+                FirewallService.RemoveFirewallRule(connection.PeerIp);
+                RouteService.RemoveRoute(connection.PeerIp);
 
-                App.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     Connections.Remove(connection);
                 });
             }
             catch (Exception ex)
             {
+                ShowErrorModal("清理失败", $"清理配置失败: {ex.Message}");
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Controls.CustomDialog.ShowModal("清理失败", $"清理配置失败: {ex.Message}", false);
                     connection.Status = "错误";
                 });
             }
@@ -348,7 +345,7 @@ public class SignalRService
     {
         try
         {
-            App.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 connection.Status = "断开中";
             });
@@ -358,19 +355,19 @@ public class SignalRService
                 await _connection.InvokeAsync("DisconnectPeer", connection.PeerId);
             }
 
-            var firewallSuccess = FirewallService.RemoveFirewallRule(connection.PeerIp);
-            var routeSuccess = RouteService.RemoveRoute(connection.PeerIp);
+            FirewallService.RemoveFirewallRule(connection.PeerIp);
+            RouteService.RemoveRoute(connection.PeerIp);
 
-            App.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 Connections.Remove(connection);
             });
         }
         catch (Exception ex)
         {
+            ShowErrorModal("断开失败", $"断开连接失败: {ex.Message}");
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Controls.CustomDialog.ShowModal("断开失败", $"断开连接失败: {ex.Message}", false);
                 connection.Status = "错误";
             });
         }
