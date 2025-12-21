@@ -62,7 +62,7 @@ try
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<InterconnectionHub>>();
             
             var hub = new InterconnectionHub(logger, hubContext);
-            await hub.CleanupInactiveClients(TimeSpan.FromMinutes(2));
+            await hub.CleanupInactiveClients(TimeSpan.FromMinutes(InterconnectionHub.HEARTBEAT_TIMEOUT_MINUTES));
         }
         catch (Exception ex)
         {
@@ -73,7 +73,14 @@ try
     Log.Information($"Server listening on HTTP: http://{ipAddress}:{httpPort}");
     Log.Information($"Server listening on WebSocket: ws://{ipAddress}:{webSocketPort}");
     
-    app.Run();
+    try
+    {
+        app.Run();
+    }
+    finally
+    {
+        cleanupTimer?.Dispose();
+    }
 }
 catch (Exception ex)
 {

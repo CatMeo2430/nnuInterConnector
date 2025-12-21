@@ -12,13 +12,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b1170f57-7b34-4b8d-8e0c-54cfcae7018b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.nnuInterConnector/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Client.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ConnectionProgressWindow.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/Services/SignalRService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/Services/SignalRService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Client/ViewModels/MainViewModel.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Hubs/InterconnectionHub.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Server/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Server/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Server/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/Server/appsettings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,6 +48,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7c0f83388bfc4d2c9d09befcec9dd79bc90908/d7/60eeeee7/InvalidOperationException.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/ConnectionProgressWindow.xaml.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Client/Services/SignalRService.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Project/nnuIC/nnuInterConnector/Server/appsettings.json" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -156,7 +152,7 @@
       <workItem from="1766044661691" duration="9587000" />
       <workItem from="1766144689906" duration="4079000" />
       <workItem from="1766149096587" duration="37327000" />
-      <workItem from="1766234514868" duration="16753000" />
+      <workItem from="1766234514868" duration="18249000" />
     </task>
     <task id="LOCAL-00001" summary="Init Commit">
       <option name="closed" value="true" />
@@ -358,7 +354,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766247896340</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Dev 0.1.6.0 - 1&#10;小修复">
+      <option name="closed" value="true" />
+      <created>1766281443248</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1766281443248</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -379,7 +383,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Init Commit" />
     <MESSAGE value="Dev 0.0.0.0&#10;基本框架实现&#10;客户端已成功发送与接收互联请求" />
     <MESSAGE value="Beta 0.0.1.1&#10;IP上报逻辑更改为注册时&#10;Websocket专注于心跳、协商和通知业务" />
     <MESSAGE value="Alpha 0.0.2.1&#10;修复互联状态不符合实际的问题" />
@@ -404,7 +407,8 @@
     <MESSAGE value="Alpha 0.1.4.0&#10;完成弹窗GUI" />
     <MESSAGE value="Dev 0.1.5.0 - 1&#10;新增安全机制" />
     <MESSAGE value="Dev 0.1.5.0 - 2&#10;完善安全机制" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.5.0 - 2&#10;完善安全机制" />
+    <MESSAGE value="Dev 0.1.6.0 - 1&#10;小修复" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dev 0.1.6.0 - 1&#10;小修复" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

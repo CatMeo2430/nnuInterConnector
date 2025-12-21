@@ -7,6 +7,22 @@ namespace Server.Hubs;
 
 public class InterconnectionHub : Hub
 {
+    // 连接超时时间（秒）
+    private const int CONNECTION_TIMEOUT_SECONDS = 30;
+    
+    // 冷却期时间（分钟）
+    private const int COOLDOWN_MINUTES = 1;
+    
+    // 永久拒绝阈值（被拒绝次数）
+    private const int PERMANENT_REJECT_THRESHOLD = 3;
+    
+    // 心跳超时时间（分钟）
+    public const int HEARTBEAT_TIMEOUT_MINUTES = 2;
+    
+    // 随机ID范围
+    private const int MIN_CLIENT_ID = 100000;
+    private const int MAX_CLIENT_ID = 999999;
+    
     private static readonly ConcurrentDictionary<int, ClientInfo> _clients = new();
     private static readonly ConcurrentDictionary<string, int> _uuidToId = new();
     private static readonly ConcurrentDictionary<int, HashSet<int>> _connections = new();
@@ -150,6 +166,13 @@ public class InterconnectionHub : Hub
 
     public async Task RequestConnection(int targetId)
     {
+        // 验证targetId范围
+        if (targetId < MIN_CLIENT_ID || targetId > MAX_CLIENT_ID)
+        {
+            await Clients.Caller.SendAsync("ConnectionFailed", 7); // 7 = 无效的ID格式
+            return;
+        }
+        
         var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
         if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
             return;
@@ -177,19 +200,19 @@ public class InterconnectionHub : Hub
         var rejectKey = (requesterId, targetId);
         if (_rejectHistory.TryGetValue(rejectKey, out var rejectInfo))
         {
-            // 检查是否达到3次拒绝（永久拒绝）
-            if (rejectInfo.rejectCount >= 3)
+            // 检查是否达到永久拒绝阈值
+            if (rejectInfo.rejectCount >= PERMANENT_REJECT_THRESHOLD)
             {
-                _logger.LogInformation("Connection request permanently rejected: Requester {RequesterId} has been rejected 3 times by {TargetId}", requesterId, targetId);
+                _logger.LogInformation("Connection request permanently rejected: Requester {RequesterId} has been rejected {RejectCount} times by {TargetId}", requesterId, rejectInfo.rejectCount, targetId);
                 await Clients.Caller.SendAsync("ConnectionFailed", 5); // 5 = 永久拒绝
                 return;
             }
             
-            // 检查冷却期（1分钟）
+            // 检查冷却期
             var timeSinceLastReject = DateTime.UtcNow - rejectInfo.lastRejectTime;
-            if (timeSinceLastReject < TimeSpan.FromMinutes(1))
+            if (timeSinceLastReject < TimeSpan.FromMinutes(COOLDOWN_MINUTES))
             {
-                var remainingSeconds = (int)(TimeSpan.FromMinutes(1) - timeSinceLastReject).TotalSeconds;
+                var remainingSeconds = (int)(TimeSpan.FromMinutes(COOLDOWN_MINUTES) - timeSinceLastReject).TotalSeconds;
                 _logger.LogInformation("Connection request rejected: Requester {RequesterId} is in cooldown period for {TargetId}, remaining {RemainingSeconds}s", requesterId, targetId, remainingSeconds);
                 await Clients.Caller.SendAsync("ConnectionFailed", 6); // 6 = 冷却期中
                 return;
@@ -211,7 +234,7 @@ public class InterconnectionHub : Hub
         {
             try
             {
-                await Task.Delay(30000, cts.Token); // 30秒超时
+                await Task.Delay(TimeSpan.FromSeconds(CONNECTION_TIMEOUT_SECONDS), cts.Token);
                 
                 // 超时处理
                 if (_pendingRequests.TryRemove(requestKey, out _))
@@ -360,7 +383,7 @@ public class InterconnectionHub : Hub
         int id;
         do
         {
-            id = _random.Next(100000, 1000000);
+            id = _random.Next(MIN_CLIENT_ID, MAX_CLIENT_ID + 1);
         } while (_clients.ContainsKey(id));
 
         return id;
