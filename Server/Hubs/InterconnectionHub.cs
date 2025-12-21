@@ -44,7 +44,7 @@ public class InterconnectionHub : Hub
         
         if (string.IsNullOrEmpty(uuid))
         {
-            _logger.LogWarning("Client connected without UUID");
+            _logger.LogWarning("[Unknown] Client connected without UUID");
             Context.Abort();
             return;
         }
@@ -55,7 +55,7 @@ public class InterconnectionHub : Hub
             {
                 clientInfo.ConnectionId = Context.ConnectionId;
                 clientInfo.LastHeartbeat = DateTime.UtcNow;
-                _logger.LogInformation("Client reconnected: ID={ClientId}, UUID={Uuid}", clientId, uuid);
+                _logger.LogInformation("[{ClientId}] Client reconnected, UUID={Uuid}", clientId, uuid);
             }
         }
 
@@ -64,44 +64,32 @@ public class InterconnectionHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        int? disconnectedClientId = null;
-        string? disconnectedClientIp = null;
-        
-        foreach (var kvp in _clients)
-        {
-            if (kvp.Value.ConnectionId == Context.ConnectionId)
-            {
-                disconnectedClientId = kvp.Key;
-                disconnectedClientIp = kvp.Value.IpAddress;
-                _logger.LogInformation("Client disconnected: ID={ClientId}, IP={Ip}", kvp.Key, disconnectedClientIp);
-                break;
-            }
-        }
+        var disconnectedClient = _clients.FirstOrDefault(kvp => kvp.Value.ConnectionId == Context.ConnectionId);
+        var disconnectedClientId = disconnectedClient.Key;
+        var disconnectedClientIp = disconnectedClient.Value?.IpAddress;
 
-        if (disconnectedClientId.HasValue)
+        if (disconnectedClientId != 0)
         {
-            var clientId = disconnectedClientId.Value;
-            
-            if (_connections.TryRemove(clientId, out var connectedClients))
+            if (_connections.TryRemove(disconnectedClientId, out var connectedClients))
             {
                 foreach (var connectedClientId in connectedClients)
                 {
                     if (_connections.TryGetValue(connectedClientId, out var otherConnections))
                     {
-                        otherConnections.Remove(clientId);
+                        otherConnections.Remove(disconnectedClientId);
                     }
 
                     if (_clients.TryGetValue(connectedClientId, out var connectedClientInfo))
                     {
-                        _logger.LogInformation("Notifying client {ClientId} about disconnection of {DisconnectedId}", 
-                            connectedClientId, clientId);
+                        _logger.LogInformation("[{DisconnectedId}] Notifying client {ClientId} about disconnection", 
+                            disconnectedClientId, connectedClientId);
                         await Clients.Client(connectedClientInfo.ConnectionId)
-                            .SendAsync("PeerDisconnected", clientId, disconnectedClientIp);
+                            .SendAsync("PeerDisconnected", disconnectedClientId, disconnectedClientIp);
                     }
                 }
             }
 
-            if (_clients.TryRemove(clientId, out var clientInfo))
+            if (_clients.TryRemove(disconnectedClientId, out var clientInfo))
             {
                 _uuidToId.TryRemove(clientInfo.Uuid, out _);
             }
@@ -118,7 +106,7 @@ public class InterconnectionHub : Hub
             {
                 existingInfo.ConnectionId = Context.ConnectionId;
                 existingInfo.LastHeartbeat = DateTime.UtcNow;
-                _logger.LogInformation("Client re-registered: ID={ClientId}, IP={Ip}", existingId, existingInfo.IpAddress);
+                _logger.LogInformation("[{ClientId}] Client re-registered, IP={Ip}", existingId, existingInfo.IpAddress);
             }
             await Clients.Caller.SendAsync("RegistrationSuccess", existingId);
             return;
@@ -127,7 +115,7 @@ public class InterconnectionHub : Hub
         var ipAddress = Controllers.RegistrationController.GetPendingIp(uuid);
         if (string.IsNullOrEmpty(ipAddress))
         {
-            _logger.LogWarning("Client registration failed: IP not found for UUID={Uuid}", uuid);
+            _logger.LogWarning("[Unknown] Client registration failed: IP not found for UUID={Uuid}", uuid);
             Context.Abort();
             return;
         }
@@ -145,44 +133,35 @@ public class InterconnectionHub : Hub
         _uuidToId[uuid] = clientId;
         Controllers.RegistrationController.RemovePendingRegistration(uuid);
 
-        _logger.LogInformation("New client registered: ID={ClientId}, UUID={Uuid}, IP={Ip}", clientId, uuid, ipAddress);
+        _logger.LogInformation("[{ClientId}] New client registered, UUID={Uuid}, IP={Ip}", clientId, uuid, ipAddress);
         await Clients.Caller.SendAsync("RegistrationSuccess", clientId);
     }
 
     public Task UpdateHeartbeat()
     {
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var clientId))
+        if (!TryGetClientId(out var clientId) || !_clients.TryGetValue(clientId, out var clientInfo))
             return Task.CompletedTask;
 
-        if (_clients.TryGetValue(clientId, out var clientInfo))
-        {
-            clientInfo.LastHeartbeat = DateTime.UtcNow;
-            _logger.LogDebug("Heartbeat updated: ID={ClientId}", clientId);
-        }
+        clientInfo.LastHeartbeat = DateTime.UtcNow;
+        _logger.LogDebug("[{ClientId}] Heartbeat updated", clientId);
         
         return Task.CompletedTask;
     }
 
     public async Task RequestConnection(int targetId)
     {
-        // 验证targetId范围
         if (targetId < MIN_CLIENT_ID || targetId > MAX_CLIENT_ID)
         {
-            await Clients.Caller.SendAsync("ConnectionFailed", 7); // 7 = 无效的ID格式
+            await Clients.Caller.SendAsync("ConnectionFailed", 7);
             return;
         }
-        
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
-            return;
 
-        if (!_clients.TryGetValue(requesterId, out var requesterInfo))
+        if (!TryGetClientId(out var requesterId) || !_clients.TryGetValue(requesterId, out var requesterInfo))
             return;
 
         if (!_clients.TryGetValue(targetId, out var targetInfo))
         {
-            _logger.LogInformation("Connection request failed: Target ID {TargetId} does not exist", targetId);
+            _logger.LogInformation("[{RequesterId}] Connection request failed: Target ID {TargetId} does not exist", requesterId, targetId);
             await Clients.Caller.SendAsync("ConnectionFailed", 1); // 1 = 目标ID不存在
             return;
         }
@@ -191,7 +170,7 @@ public class InterconnectionHub : Hub
         var hasPendingRequest = _pendingRequests.Keys.Any(k => k.requesterId == requesterId);
         if (hasPendingRequest)
         {
-            _logger.LogInformation("Connection request rejected: Requester {RequesterId} already has a pending request", requesterId);
+            _logger.LogInformation("[{RequesterId}] Connection request rejected: Already has a pending request", requesterId);
             await Clients.Caller.SendAsync("ConnectionFailed", 4); // 4 = 重复请求
             return;
         }
@@ -203,7 +182,7 @@ public class InterconnectionHub : Hub
             // 检查是否达到永久拒绝阈值
             if (rejectInfo.rejectCount >= PERMANENT_REJECT_THRESHOLD)
             {
-                _logger.LogInformation("Connection request permanently rejected: Requester {RequesterId} has been rejected {RejectCount} times by {TargetId}", requesterId, rejectInfo.rejectCount, targetId);
+                _logger.LogInformation("[{RequesterId}] Connection request permanently rejected: Has been rejected {RejectCount} times by {TargetId}", requesterId, rejectInfo.rejectCount, targetId);
                 await Clients.Caller.SendAsync("ConnectionFailed", 5); // 5 = 永久拒绝
                 return;
             }
@@ -213,13 +192,13 @@ public class InterconnectionHub : Hub
             if (timeSinceLastReject < TimeSpan.FromMinutes(COOLDOWN_MINUTES))
             {
                 var remainingSeconds = (int)(TimeSpan.FromMinutes(COOLDOWN_MINUTES) - timeSinceLastReject).TotalSeconds;
-                _logger.LogInformation("Connection request rejected: Requester {RequesterId} is in cooldown period for {TargetId}, remaining {RemainingSeconds}s", requesterId, targetId, remainingSeconds);
+                _logger.LogInformation("[{RequesterId}] Connection request rejected: In cooldown period for {TargetId}, remaining {RemainingSeconds}s", requesterId, targetId, remainingSeconds);
                 await Clients.Caller.SendAsync("ConnectionFailed", 6); // 6 = 冷却期中
                 return;
             }
         }
 
-        _logger.LogInformation("Connection request: {RequesterId} -> {TargetId}", requesterId, targetId);
+        _logger.LogInformation("[{RequesterId}] Connection request -> {TargetId}", requesterId, targetId);
         
         // 创建取消令牌源用于超时控制
         var cts = new CancellationTokenSource();
@@ -239,7 +218,7 @@ public class InterconnectionHub : Hub
                 // 超时处理
                 if (_pendingRequests.TryRemove(requestKey, out _))
                 {
-                    _logger.LogInformation("Connection request timeout: {RequesterId} -> {TargetId}", requesterId, targetId);
+                    _logger.LogInformation("[{RequesterId}] Connection request timeout -> {TargetId}", requesterId, targetId);
                     
                     // 向请求方发送被拒绝消息
                     await Clients.Client(requesterInfo.ConnectionId).SendAsync("ConnectionRejected", targetId);
@@ -251,18 +230,15 @@ public class InterconnectionHub : Hub
             catch (TaskCanceledException)
             {
                 // 请求被正常处理（接受、拒绝或取消），取消定时器
-                _logger.LogInformation("Connection request cancelled: {RequesterId} -> {TargetId}", requesterId, targetId);
+                _logger.LogInformation("[{RequesterId}] Connection request cancelled -> {TargetId}", requesterId, targetId);
             }
         });
     }
 
     public async Task AcceptConnection(int requesterId)
     {
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var accepterId))
-            return;
-
-        if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
+        if (!TryGetClientId(out var accepterId) || 
+            !_clients.TryGetValue(requesterId, out var requesterInfo) || 
             !_clients.TryGetValue(accepterId, out var accepterInfo))
             return;
 
@@ -274,7 +250,7 @@ public class InterconnectionHub : Hub
             cts.Dispose();
         }
 
-        _logger.LogInformation("Connection accepted: {RequesterId} <-> {AccepterId}", requesterId, accepterId);
+        _logger.LogInformation("[{RequesterId}] Connection accepted <-> {AccepterId}", requesterId, accepterId);
 
         _connections.AddOrUpdate(requesterId, 
             new HashSet<int> { accepterId }, 
@@ -290,11 +266,7 @@ public class InterconnectionHub : Hub
 
     public async Task RejectConnection(int requesterId)
     {
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var rejecterId))
-            return;
-
-        if (!_clients.TryGetValue(requesterId, out var requesterInfo))
+        if (!TryGetClientId(out var rejecterId) || !_clients.TryGetValue(requesterId, out var requesterInfo))
             return;
 
         // 取消超时定时器
@@ -305,7 +277,7 @@ public class InterconnectionHub : Hub
             cts.Dispose();
         }
 
-        _logger.LogInformation("Connection rejected: {RequesterId} <- {RejecterId}", requesterId, rejecterId);
+        _logger.LogInformation("[{RequesterId}] Connection rejected <- {RejecterId}", requesterId, rejecterId);
         
         // 更新拒绝历史记录（只有主动拒绝才计入）
         var rejectKey = (requesterId, rejecterId);
@@ -319,11 +291,8 @@ public class InterconnectionHub : Hub
 
     public async Task CancelConnection(int targetId)
     {
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
-            return;
-
-        if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
+        if (!TryGetClientId(out var requesterId) || 
+            !_clients.TryGetValue(requesterId, out var requesterInfo) || 
             !_clients.TryGetValue(targetId, out var targetInfo))
             return;
 
@@ -335,7 +304,7 @@ public class InterconnectionHub : Hub
             cts.Dispose();
         }
 
-        _logger.LogInformation("Connection cancelled: {RequesterId} -x-> {TargetId}", requesterId, targetId);
+        _logger.LogInformation("[{RequesterId}] Connection cancelled -x-> {TargetId}", requesterId, targetId);
         
         // 通知被请求者请求被取消
         await Clients.Client(targetInfo.ConnectionId).SendAsync("ConnectionCancelled", requesterId);
@@ -346,23 +315,20 @@ public class InterconnectionHub : Hub
 
     public async Task DisconnectPeer(int peerId)
     {
-        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
-        if (string.IsNullOrEmpty(uuid) || !_uuidToId.TryGetValue(uuid, out var requesterId))
-            return;
-
-        if (!_clients.TryGetValue(requesterId, out var requesterInfo) || 
+        if (!TryGetClientId(out var requesterId) || 
+            !_clients.TryGetValue(requesterId, out var requesterInfo) || 
             !_clients.TryGetValue(peerId, out var peerInfo))
             return;
 
         if (!_connections.TryGetValue(requesterId, out var requesterConnections) ||
             !requesterConnections.Contains(peerId))
         {
-            _logger.LogWarning("Disconnect attempt for non-existent connection: {RequesterId} -/-> {PeerId}", 
+            _logger.LogWarning("[{RequesterId}] Disconnect attempt for non-existent connection -/-> {PeerId}", 
                 requesterId, peerId);
             return;
         }
 
-        _logger.LogInformation("Connection disconnected: {RequesterId} -/-> {PeerId}", requesterId, peerId);
+        _logger.LogInformation("[{RequesterId}] Connection disconnected -/-> {PeerId}", requesterId, peerId);
 
         requesterConnections.Remove(peerId);
         if (requesterConnections.Count == 0)
@@ -389,6 +355,13 @@ public class InterconnectionHub : Hub
         return id;
     }
 
+    private bool TryGetClientId(out int clientId)
+    {
+        clientId = 0;
+        var uuid = Context.GetHttpContext()?.Request.Headers["X-Client-UUID"].ToString();
+        return !string.IsNullOrEmpty(uuid) && _uuidToId.TryGetValue(uuid, out clientId);
+    }
+
     public async Task CleanupInactiveClients(TimeSpan timeout)
     {
         var cutoffTime = DateTime.UtcNow - timeout;
@@ -399,7 +372,7 @@ public class InterconnectionHub : Hub
             var clientId = kvp.Key;
             var clientInfo = kvp.Value;
             
-            _logger.LogInformation("Cleaning up inactive client: ID={ClientId}, IP={Ip}", clientId, clientInfo.IpAddress);
+            _logger.LogInformation("[{ClientId}] Cleaning up inactive client, IP={Ip}", clientId, clientInfo.IpAddress);
 
             if (_connections.TryRemove(clientId, out var connectedClients))
             {
@@ -412,8 +385,8 @@ public class InterconnectionHub : Hub
 
                     if (_clients.TryGetValue(connectedClientId, out var connectedClientInfo))
                     {
-                        _logger.LogInformation("Notifying client {ClientId} about disconnection of inactive {DisconnectedId}", 
-                            connectedClientId, clientId);
+                        _logger.LogInformation("[{DisconnectedId}] Notifying client {ClientId} about disconnection of inactive", 
+                            clientId, connectedClientId);
                         await _hubContext.Clients.Client(connectedClientInfo.ConnectionId)
                             .SendAsync("PeerDisconnected", clientId, clientInfo.IpAddress);
                     }

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.SignalR;
 using Server.Hubs;
 using Serilog;
-using System.Net;
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Console(outputTemplate: "[{Level:u3}][{Timestamp:yy-MM-dd HH:mm:ss}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 try
@@ -28,18 +27,18 @@ try
     });
     
     var serverConfig = builder.Configuration.GetSection("ServerConfig");
-    var ipAddress = IPAddress.Parse(serverConfig["IpAddress"] ?? throw new InvalidOperationException("ServerConfig:IpAddress not configured"));
+    var ipAddress = System.Net.IPAddress.Parse(serverConfig["IpAddress"] ?? throw new InvalidOperationException("ServerConfig:IpAddress not configured"));
     var httpPort = int.Parse(serverConfig["HttpPort"] ?? "8080");
     var webSocketPort = int.Parse(serverConfig["WebSocketPort"] ?? "8081");
     
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.Listen(IPAddress.Any, httpPort, listenOptions =>
+        options.Listen(System.Net.IPAddress.Any, httpPort, listenOptions =>
         {
             listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
         });
         
-        options.Listen(IPAddress.Any, webSocketPort, listenOptions =>
+        options.Listen(System.Net.IPAddress.Any, webSocketPort, listenOptions =>
         {
             listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
         });
@@ -53,7 +52,7 @@ try
     app.MapControllers();
     app.MapHub<InterconnectionHub>("/interconnectionHub");
     
-    var cleanupTimer = new System.Threading.Timer(async _ =>
+    using var cleanupTimer = new System.Threading.Timer(async _ =>
     {
         try
         {
@@ -70,17 +69,10 @@ try
         }
     }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     
-    Log.Information($"Server listening on HTTP: http://{ipAddress}:{httpPort}");
-    Log.Information($"Server listening on WebSocket: ws://{ipAddress}:{webSocketPort}");
+    Log.Information("Server listening on HTTP: http://{IpAddress}:{HttpPort}", ipAddress, httpPort);
+    Log.Information("Server listening on WebSocket: ws://{IpAddress}:{WebSocketPort}", ipAddress, webSocketPort);
     
-    try
-    {
-        app.Run();
-    }
-    finally
-    {
-        cleanupTimer?.Dispose();
-    }
+    app.Run();
 }
 catch (Exception ex)
 {
