@@ -32,9 +32,9 @@ public class NetworkService
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Serilog.Log.Error(ex, "Failed to get campus network IP");
+            // 静默处理异常，返回空字符串
         }
 
         return string.Empty;
