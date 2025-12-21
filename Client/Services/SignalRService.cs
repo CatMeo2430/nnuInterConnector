@@ -57,7 +57,11 @@ public class SignalRService
 
             if (string.IsNullOrEmpty(_ipAddress))
             {
-                await Task.Delay(2000);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Controls.CustomDialog.ShowModal("网络错误", "请在NNU仙林校区校园网内使用", false);
+                });
+                await Task.Delay(3000);
                 Environment.Exit(1);
                 return;
             }
