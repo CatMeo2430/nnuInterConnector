@@ -28,7 +28,7 @@ try
     });
     
     var serverConfig = builder.Configuration.GetSection("ServerConfig");
-    var ipAddress = IPAddress.Parse(serverConfig["IpAddress"] ?? "120.55.67.157");
+    var ipAddress = IPAddress.Parse(serverConfig["IpAddress"] ?? throw new InvalidOperationException("ServerConfig:IpAddress not configured"));
     var httpPort = int.Parse(serverConfig["HttpPort"] ?? "8080");
     var webSocketPort = int.Parse(serverConfig["WebSocketPort"] ?? "8081");
     

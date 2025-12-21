@@ -6,8 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -16,7 +14,6 @@ namespace Client.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly SignalRService _signalRService;
-    private readonly string _logFilePath;
     private ConnectionProgressWindow? _currentProgressWindow;
     private readonly ConcurrentDictionary<int, Controls.CustomDialog> _pendingDialogs = new();
 
@@ -31,14 +28,6 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnConnectionModeChanged(ConnectionMode value)
     {
-        var modeText = value switch
-        {
-            ConnectionMode.Manual => "手动控制",
-            ConnectionMode.AutoAccept => "自动同意",
-            ConnectionMode.AutoReject => "自动拒绝",
-            _ => "未知"
-        };
-        LogMessage($"连接模式切换为：{modeText}");
     }
 
     public ObservableCollection<ConnectionInfo> Connections => _signalRService.Connections;
@@ -51,11 +40,10 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 Clipboard.SetText(peerId.ToString());
-                LogMessage($"ID {peerId} 已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制ID失败: {ex.Message}");
+                Controls.CustomDialog.Show("错误", $"复制ID失败: {ex.Message}", false);
             }
         }
     }
@@ -68,11 +56,10 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 Clipboard.SetText(peerIp);
-                LogMessage($"IP {peerIp} 已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制IP失败: {ex.Message}");
+                Controls.CustomDialog.Show("错误", $"复制IP失败: {ex.Message}", false);
             }
         }
     }
@@ -85,11 +72,10 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 Clipboard.SetText(status);
-                LogMessage($"状态 '{status}' 已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制状态失败: {ex.Message}");
+                Controls.CustomDialog.Show("错误", $"复制状态失败: {ex.Message}", false);
             }
         }
     }
@@ -103,11 +89,10 @@ public partial class MainViewModel : ObservableObject
             {
                 var timeString = time.ToString("yyyy-MM-dd HH:mm:ss");
                 Clipboard.SetText(timeString);
-                LogMessage($"时间 {timeString} 已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制时间失败: {ex.Message}");
+                Controls.CustomDialog.Show("错误", $"复制时间失败: {ex.Message}", false);
             }
         }
     }
@@ -115,20 +100,12 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
     {
         _signalRService = new SignalRService();
-        _signalRService.LogMessage += OnLogMessage;
         _signalRService.RegistrationSuccess += OnRegistrationSuccess;
         _signalRService.ConnectionRequestReceived += OnConnectionRequestReceived;
         _signalRService.ConnectionEstablished += OnConnectionEstablished;
         _signalRService.ConnectionRejected += OnConnectionRejected;
         _signalRService.ConnectionTimeout += OnConnectionTimeout;
         _signalRService.ConnectionCancelled += OnConnectionCancelled;
-
-        // 初始化日志文件
-        var logsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-        Directory.CreateDirectory(logsDirectory);
-        _logFilePath = Path.Combine(logsDirectory, $"{DateTime.Now:yyyy-MM-dd}.log");
-
-        LogMessage("NNU InterConnector 客户端启动");
         
         _ = InitializeAsync();
     }
@@ -137,11 +114,6 @@ public partial class MainViewModel : ObservableObject
     {
         await _signalRService.InitializeAsync();
         MyIp = _signalRService.IpAddress;
-    }
-
-    private void OnLogMessage(object? sender, string message)
-    {
-        LogMessage(message);
     }
 
     private void OnRegistrationSuccess(object? sender, int id)
@@ -161,7 +133,6 @@ public partial class MainViewModel : ObservableObject
             switch (ConnectionMode)
             {
                 case ConnectionMode.Manual:
-                    // 创建非模态对话框
                     var dialog = await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         var dlg = Controls.CustomDialog.Show(
@@ -172,32 +143,25 @@ public partial class MainViewModel : ObservableObject
                         return dlg;
                     });
 
-                    // 等待结果
                     var result = await dialog.ResultTask;
-
-                    // 从字典中移除
                     _pendingDialogs.TryRemove(requesterId, out _);
 
                     if (result == true)
                     {
                         await _signalRService.AcceptConnectionAsync(requesterId);
-                        LogMessage($"✅ 已接受 ID {requesterId} 的连接请求");
                     }
                     else
                     {
                         await _signalRService.RejectConnectionAsync(requesterId);
-                        LogMessage($"❌ 已拒绝 ID {requesterId} 的连接请求");
                     }
                     break;
                     
                 case ConnectionMode.AutoAccept:
                     await _signalRService.AcceptConnectionAsync(requesterId);
-                    LogMessage($"✅ 自动接受 ID {requesterId} 的连接请求");
                     break;
                     
                 case ConnectionMode.AutoReject:
                     await _signalRService.RejectConnectionAsync(requesterId);
-                    LogMessage($"❌ 自动拒绝 ID {requesterId} 的连接请求");
                     break;
             }
         });
@@ -206,9 +170,7 @@ public partial class MainViewModel : ObservableObject
     private void OnConnectionEstablished(object? sender, (int, string) e)
     {
         var (peerId, peerIp) = e;
-        LogMessage($"与 ID {peerId} 的连接已建立");
         
-        // 关闭当前的连接进度窗口
         Application.Current.Dispatcher.Invoke(() =>
         {
             _currentProgressWindow?.Close();
@@ -218,43 +180,31 @@ public partial class MainViewModel : ObservableObject
 
     private void OnConnectionTimeout(object? sender, int requesterId)
     {
-        LogMessage($"ID {requesterId} 的连接请求超时");
-        
-        // 关闭超时对应的确认对话框
         Application.Current.Dispatcher.Invoke(() =>
         {
             if (_pendingDialogs.TryRemove(requesterId, out var dialog))
             {
                 dialog.Close();
-                LogMessage($"已关闭 ID {requesterId} 的确认对话框");
             }
         });
     }
 
     private void OnConnectionCancelled(object? sender, int requesterId)
     {
-        LogMessage($"ID {requesterId} 取消了连接请求");
-        
-        // 关闭取消对应的确认对话框
         Application.Current.Dispatcher.Invoke(() =>
         {
             if (_pendingDialogs.TryRemove(requesterId, out var dialog))
             {
                 dialog.Close();
-                LogMessage($"已关闭 ID {requesterId} 的确认对话框");
             }
         });
     }
 
     private void OnConnectionRejected(object? sender, int e)
     {
-        LogMessage($"ID {e} 拒绝了您的连接请求");
-        
-        // 保存当前窗口引用
         var progressWindow = _currentProgressWindow;
         _currentProgressWindow = null;
         
-        // 确保在UI线程上显示对话框并关闭窗口
         Application.Current.Dispatcher.Invoke(() =>
         {
             Controls.CustomDialog.ShowModal("请求被拒绝", $"ID {e} 拒绝了您的连接请求", false);
@@ -287,22 +237,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private void LogMessage(string message)
-    {
-        var logEntry = $"[{DateTime.Now:HH:mm:ss}] {message}";
-        
-        // 写入日志文件
-        try
-        {
-            File.AppendAllText(_logFilePath, logEntry + Environment.NewLine);
-        }
-        catch (Exception ex)
-        {
-            // 如果写入文件失败，静默处理（避免无限递归）
-            Debug.WriteLine($"日志写入失败: {ex.Message}");
-        }
-    }
-
     [RelayCommand]
     private void CopyId()
     {
@@ -311,11 +245,9 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 Clipboard.SetText(MyId);
-                LogMessage("ID已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制ID失败: {ex.Message}");
                 Controls.CustomDialog.Show("错误", $"复制ID失败: {ex.Message}", false);
             }
         }
@@ -329,11 +261,9 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 Clipboard.SetText(MyIp);
-                LogMessage("IP已复制到剪贴板");
             }
             catch (Exception ex)
             {
-                LogMessage($"复制IP失败: {ex.Message}");
                 Controls.CustomDialog.Show("错误", $"复制IP失败: {ex.Message}", false);
             }
         }

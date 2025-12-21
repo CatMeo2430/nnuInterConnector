@@ -177,8 +177,12 @@ public partial class ConnectionProgressWindow : Window
         {
             StatusText.Text = $"连接失败: {errorMessage}";
             UpdateProgress(0, "连接失败");
-            // 延迟关闭窗口，让用户看到错误信息
-            Task.Delay(2000).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
+            
+            // 弹窗告知用户具体原因
+            Controls.CustomDialog.ShowModal("连接失败", errorMessage, false);
+            
+            // 延迟关闭窗口
+            Task.Delay(500).ContinueWith(_ => Dispatcher.BeginInvoke(Close));
         });
         
         _connectionResult.TrySetResult(false);
